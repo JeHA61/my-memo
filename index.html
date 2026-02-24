@@ -2,194 +2,159 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>BLACK SPACE PRO - SMART SYNC</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BLACK SPACE</title>
     <style>
-        :root {
-            --bg-color: #000000; --sidebar-bg: #0a0a0a; --text-main: #ffffff;
-            --text-body: #cccccc; --border-color: #222222; --accent-color: #ffffff;
-            --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        /* 레이아웃 보존: 검은색 배경과 깔끔한 디자인 */
+        body {
+            margin: 0;
+            padding: 20px;
+            background-color: #000;
+            color: #fff;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; background: transparent; color: inherit; font-family: var(--font-family); }
-        body { background-color: var(--bg-color); color: var(--text-main); height: 100vh; display: flex; overflow: hidden; }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
 
-        /* 사이드바 */
-        .sidebar { width: 280px; background-color: var(--sidebar-bg); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; padding: 40px 20px; }
-        .section-label { font-size: 10px; font-weight: 700; color: #555; margin-bottom: 15px; letter-spacing: 2px; }
-        .folder-list { list-style: none; margin-bottom: 20px; }
-        .folder-item { padding: 10px; cursor: pointer; font-size: 13px; color: #777; transition: 0.3s; border-radius: 4px; }
-        .folder-item.active { color: #fff; font-weight: 700; background: #1a1a1a; border-left: 3px solid #fff; }
-        
-        /* 상태 표시등 추가 */
-        .sync-status { display: flex; align-items: center; gap: 8px; font-size: 11px; color: #444; margin-bottom: 20px; }
-        .status-dot { width: 6px; height: 6px; background: #444; border-radius: 50%; }
-        .status-dot.active { background: #00ff00; box-shadow: 0 0 5px #00ff00; }
+        .title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
 
-        .memo-list-container { flex: 1; overflow-y: auto; }
-        .memo-summary { padding: 15px; border-bottom: 1px solid var(--border-color); cursor: pointer; }
-        .memo-summary.active { background: #151515; border-left: 3px solid var(--accent-color); }
-        .m-title { font-size: 14px; font-weight: 500; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        /* 입력 영역 */
+        #diary-input {
+            width: 100%;
+            height: 60vh;
+            background-color: #000;
+            color: #fff;
+            border: 1px solid #333;
+            border-radius: 10px;
+            padding: 15px;
+            font-size: 1rem;
+            line-height: 1.6;
+            outline: none;
+            box-sizing: border-box;
+            resize: none;
+        }
 
-        /* 하단 싱크 컨트롤 */
-        .sync-ctrl { margin-top: auto; padding-top: 20px; border-top: 1px solid #222; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-        .btn-sync { background: #111; color: #fff; border: 1px solid #333; padding: 12px; font-size: 11px; cursor: pointer; border-radius: 6px; text-align: center; }
-        .btn-sync:active { background: #fff; color: #000; }
+        /* 이미지 미리보기 영역 */
+        #image-preview {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
 
-        /* 에디터 */
-        .editor-container { flex: 1; display: flex; flex-direction: column; padding: 60px 8%; overflow-y: auto; position: relative; }
-        #editor-title { width: 100%; border: none; outline: none; font-size: 32px; font-weight: 700; color: #fff; margin-bottom: 10px; }
-        #editor-body { flex: 1; outline: none; font-size: 18px; line-height: 1.8; color: var(--text-body); min-height: 400px; }
-        
-        #toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #fff; color: #000; padding: 10px 20px; border-radius: 30px; font-size: 12px; font-weight: 700; display: none; z-index: 10000; }
+        .preview-img {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 5px;
+            border: 1px solid #444;
+        }
+
+        /* 하단 버튼 바 */
+        .toolbar {
+            position: fixed;
+            bottom: 30px;
+            left: 20px;
+            right: 20px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 15px;
+            border-radius: 12px;
+            border: none;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: 0.2s;
+            text-align: center;
+        }
+
+        .btn-attach { background-color: #222; color: #fff; }
+        .btn-save { background-color: #fff; color: #000; }
+
+        /* 파일 입력창 숨기기 */
+        #file-input { display: none; }
     </style>
 </head>
-<body onclick="hideMenu()" oncontextmenu="return false;">
+<body>
 
-    <aside class="sidebar">
-        <div class="sync-status">
-            <div id="status-dot" class="status-dot"></div>
-            <span id="status-text">LOCAL SAVED</span>
-        </div>
-        
-        <div class="section-label">FOLDERS</div>
-        <ul class="folder-list" id="folder-list"></ul>
-        <button onclick="addFolder()" style="color:#555; font-size:11px; cursor:pointer; text-align:left; margin-bottom:20px;">+ NEW FOLDER</button>
-        
-        <div class="section-label">RECORDS</div>
-        <div class="memo-list-container" id="memo-list"></div>
+    <div class="header">
+        <div class="title">BLACK SPACE</div>
+        <div id="status" style="font-size: 0.8rem; color: #666;">자동 저장됨</div>
+    </div>
 
-        <div class="sync-ctrl">
-            <button class="btn-sync" onclick="exportToCloud()">iCloud PUSH</button>
-            <button class="btn-sync" onclick="document.getElementById('file-input').click()">PULL</button>
-        </div>
-        <input type="file" id="file-input" style="display:none" onchange="importFromCloud(event)">
-    </aside>
+    <!-- 일기 본문 -->
+    <textarea id="diary-input" placeholder="오늘의 기록을 남겨보세요..."></textarea>
 
-    <main class="editor-container">
-        <input type="text" id="editor-title" placeholder="제목 없는 기록" oninput="autoSaveTrigger()" spellcheck="false">
-        <div id="editor-body" contenteditable="true" oninput="autoSaveTrigger()" spellcheck="false"></div>
-    </main>
+    <!-- 사진 미리보기 -->
+    <div id="image-preview"></div>
 
-    <div id="toast">SAVED TO CLOUD</div>
+    <!-- 하단 도구 -->
+    <div class="toolbar">
+        <label for="file-input" class="btn btn-attach">사진 첨부</label>
+        <input type="file" id="file-input" accept="image/*" multiple>
+        <button class="btn btn-save" onclick="saveDiary()">저장하기</button>
+    </div>
 
     <script>
-        // [데이터 구조]
-        let memos = JSON.parse(localStorage.getItem('BS_MEMOS')) || [];
-        let folders = JSON.parse(localStorage.getItem('BS_FOLDERS')) || ['GENERAL'];
-        let activeId = null;
-        let saveTimeout = null;
+        const diaryInput = document.getElementById('diary-input');
+        const fileInput = document.getElementById('file-input');
+        const previewContainer = document.getElementById('image-preview');
+        const statusText = document.getElementById('status');
 
-        // [초기화]
+        // 1. [기능] 페이지 로드 시 기존 내용 불러오기
         window.onload = () => {
-            renderFolders();
-            renderMemos();
+            const savedContent = localStorage.getItem('diary_content');
+            if (savedContent) {
+                diaryInput.value = savedContent;
+            }
         };
 
-        // [실시간 자동 저장 엔진]
-        function autoSaveTrigger() {
-            document.getElementById('status-dot').classList.remove('active');
-            document.getElementById('status-text').innerText = "TYPING...";
+        // 2. [기능] 저장 기능 (브라우저 로컬 저장소 사용)
+        function saveDiary() {
+            localStorage.setItem('diary_content', diaryInput.value);
+            statusText.innerText = "저장 완료";
+            statusText.style.color = "#fff";
             
-            clearTimeout(saveTimeout);
-            saveTimeout = setTimeout(() => {
-                saveToLocal();
-            }, 1000); // 타이핑 멈추고 1초 뒤 자동 저장
+            setTimeout(() => {
+                statusText.innerText = "자동 저장됨";
+                statusText.style.color = "#666";
+            }, 2000);
+            
+            alert('일기가 안전하게 저장되었습니다.');
         }
 
-        function saveToLocal() {
-            const title = document.getElementById('editor-title').value || "제목 없음";
-            const body = document.getElementById('editor-body').innerHTML;
-            const date = new Date().toLocaleString();
-
-            if (!activeId) {
-                activeId = Date.now();
-                memos.unshift({ id: activeId, title, body, date, folder: 'GENERAL' });
-            } else {
-                const idx = memos.findIndex(m => m.id === activeId);
-                memos[idx] = { ...memos[idx], title, body, date };
+        // 3. [기능] 사진 첨부 및 미리보기
+        fileInput.addEventListener('change', function(e) {
+            const files = e.target.files;
+            for(let i=0; i < files.length; i++) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const img = document.createElement('img');
+                    img.src = event.target.result;
+                    img.className = 'preview-img';
+                    previewContainer.appendChild(img);
+                }
+                reader.readAsDataURL(files[i]);
             }
+        });
 
-            localStorage.setItem('BS_MEMOS', JSON.stringify(memos));
-            localStorage.setItem('BS_FOLDERS', JSON.stringify(folders));
-            
-            renderMemos();
-            document.getElementById('status-dot').classList.add('active');
-            document.getElementById('status-text').innerText = "LOCAL SAVED";
-        }
-
-        // [iCloud 연동: 보안 암호화]
-        async function exportToCloud() {
-            const data = JSON.stringify({ memos, folders });
-            const encoder = new TextEncoder();
-            const key = await crypto.subtle.importKey('raw', encoder.encode("SECURITY_KEY_2026".padEnd(32)), {name:'AES-GCM'}, false, ['encrypt']);
-            const iv = crypto.getRandomValues(new Uint8Array(12));
-            const encrypted = await crypto.subtle.encrypt({name:'AES-GCM', iv}, key, encoder.encode(data));
-            
-            const combined = new Uint8Array(iv.length + encrypted.byteLength);
-            combined.set(iv); combined.set(new Uint8Array(encrypted), iv.length);
-            
-            const blob = new Blob([btoa(String.fromCharCode(...combined))], {type: 'text/plain'});
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = `BlackSpace_Backup.txt`; // iCloud 폴더에 이 이름으로 덮어쓰기 하시면 됩니다.
-            a.click();
-            showToast("ICLOUD SYNC READY");
-        }
-
-        async function importFromCloud(event) {
-            const file = event.target.files[0];
-            const reader = new FileReader();
-            reader.onload = async (e) => {
-                try {
-                    const combined = new Uint8Array(atob(e.target.result).split("").map(c => c.charCodeAt(0)));
-                    const key = await crypto.subtle.importKey('raw', new TextEncoder().encode("SECURITY_KEY_2026".padEnd(32)), {name:'AES-GCM'}, false, ['decrypt']);
-                    const decrypted = await crypto.subtle.decrypt({name:'AES-GCM', iv: combined.slice(0,12)}, key, combined.slice(12));
-                    const parsed = JSON.parse(new TextDecoder().decode(decrypted));
-                    
-                    memos = parsed.memos; folders = parsed.folders;
-                    saveToLocal();
-                    renderFolders(); renderMemos();
-                    showToast("SYNC COMPLETED");
-                } catch(err) { alert("파일이 올바르지 않습니다."); }
-            };
-            reader.readAsText(file);
-        }
-
-        // [UI 렌더링 함수들]
-        function renderFolders() {
-            const list = document.getElementById('folder-list');
-            list.innerHTML = folders.map(f => `<li class="folder-item ${f==='GENERAL'?'active':''}" onclick="filterFolder('${f}')">${f}</li>`).join('');
-        }
-
-        function renderMemos() {
-            const list = document.getElementById('memo-list');
-            list.innerHTML = memos.map(m => `
-                <div class="memo-summary ${activeId===m.id?'active':''}" onclick="loadMemo(${m.id})">
-                    <div class="m-title">${m.title}</div>
-                    <div style="font-size:9px; color:#444;">${m.date}</div>
-                </div>
-            `).join('');
-        }
-
-        function loadMemo(id) {
-            activeId = id;
-            const m = memos.find(x => x.id === id);
-            document.getElementById('editor-title').value = m.title;
-            document.getElementById('editor-body').innerHTML = m.body;
-            renderMemos();
-        }
-
-        function showToast(msg) {
-            const t = document.getElementById('toast');
-            t.innerText = msg; t.style.display = 'block';
-            setTimeout(() => t.style.display='none', 2000);
-        }
-
-        function addFolder() {
-            const n = prompt("NEW FOLDER NAME");
-            if(n) { folders.push(n.toUpperCase()); renderFolders(); saveToLocal(); }
-        }
+        // 4. [기능] 입력 시 실시간 임시 저장 (웹의 안전성)
+        diaryInput.addEventListener('input', () => {
+            localStorage.setItem('diary_content', diaryInput.value);
+        });
     </script>
 </body>
 </html>

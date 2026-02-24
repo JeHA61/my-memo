@@ -3,65 +3,70 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>BLACK SPACE PRO - Attachment & Date</title>
+    <title>BLACK SPACE OS - Folder Rename</title>
     <style>
-        :root { --bg: #000; --sidebar-bg: #0a0a0a; --list-bg: #111; --text: #fff; --sub: #666; --line: #1a1a1a; --accent: #007AFF; }
+        :root { --bg: #000; --sidebar-bg: #0a0a0a; --list-bg: #111; --text: #fff; --sub: #666; --line: #1a1a1a; --accent: #007AFF; --danger: #FF3B30; }
         * { box-sizing: border-box; margin: 0; padding: 0; background: transparent; }
-        body, html { height: 100%; background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; overflow: hidden; }
+        body, html { height: 100%; background: var(--bg); color: var(--text); font-family: -apple-system, sans-serif; overflow: hidden; }
 
         .app-container { display: flex; height: 100vh; width: 100vw; }
 
-        /* 1단: 폴더 목록 */
+        /* 1단: 폴더 */
         .folder-sidebar { width: 180px; background: var(--sidebar-bg); border-right: 1px solid var(--line); padding: 20px 10px; }
         .sidebar-title { font-size: 11px; color: var(--sub); letter-spacing: 1px; margin-bottom: 20px; padding-left: 10px; }
-        .folder-item { padding: 10px; font-size: 14px; color: var(--sub); cursor: pointer; border-radius: 6px; margin-bottom: 5px; }
+        .folder-item { padding: 10px; font-size: 14px; color: var(--sub); cursor: pointer; border-radius: 6px; margin-bottom: 5px; position: relative; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .folder-item.active { color: #fff; background: #222; font-weight: bold; }
 
         /* 2단: 메모 목록 */
         .memo-list-bar { width: 260px; background: var(--list-bg); border-right: 1px solid var(--line); display: flex; flex-direction: column; }
         .memo-list-header { padding: 20px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; }
-        .memo-item { padding: 20px; border-bottom: 1px solid var(--line); cursor: pointer; transition: 0.2s; }
+        .memo-item { padding: 20px; border-bottom: 1px solid var(--line); cursor: pointer; transition: 0.2s; position: relative; }
         .memo-item.active { background: #1a1a1a; border-left: 3px solid var(--accent); }
-        .m-title { font-size: 15px; font-weight: bold; margin-bottom: 5px; color: #eee; }
-        .m-date { font-size: 11px; color: #444; margin-bottom: 5px; }
+        .m-title { font-size: 14px; font-weight: bold; margin-bottom: 5px; color: #eee; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .m-date { font-size: 10px; color: #444; margin-bottom: 5px; }
 
         /* 3단: 에디터 */
         .editor-view { flex: 1; display: flex; flex-direction: column; padding: 40px 60px; overflow-y: auto; }
-        .editor-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 10px; }
         #date-display { font-size: 12px; color: var(--sub); margin-bottom: 10px; }
-        
         #title-input { border: none; color: #fff; font-size: 32px; font-weight: 700; outline: none; width: 100%; margin-bottom: 5px; }
         .divider { height: 1px; background: var(--line); margin-bottom: 20px; }
-        
-        /* 이미지 미리보기 영역 */
-        #image-preview-container { margin-bottom: 20px; display: none; position: relative; }
-        #image-preview-container img { max-width: 100%; border-radius: 8px; border: 1px solid var(--line); }
-        .remove-img { position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.5); color: white; border: none; padding: 5px 10px; cursor: pointer; border-radius: 4px; }
-
         #content-input { border: none; color: #ccc; font-size: 18px; line-height: 1.8; outline: none; width: 100%; flex: 1; resize: none; }
 
-        /* 클립 버튼 및 도구 */
-        .toolbar { display: flex; gap: 15px; align-items: center; }
-        .clip-btn { cursor: pointer; opacity: 0.6; transition: 0.3s; }
-        .clip-btn:hover { opacity: 1; }
-        
+        /* 이미지 미리보기 */
+        #image-preview-container { margin-bottom: 20px; display: none; position: relative; }
+        #image-preview-container img { max-width: 100%; border-radius: 8px; border: 1px solid var(--line); }
+
+        /* [커스텀 우클릭 메뉴] */
+        .context-menu {
+            position: fixed; background: #1c1c1e; border: 1px solid #333; border-radius: 8px;
+            width: 160px; display: none; z-index: 1000; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            padding: 5px 0;
+        }
+        .context-menu-item {
+            padding: 10px 15px; font-size: 13px; color: #eee; cursor: pointer; transition: 0.2s;
+        }
+        .context-menu-item:hover { background: var(--accent); color: #fff; }
+        .context-menu-item.delete { color: var(--danger); }
+        .context-menu-item.delete:hover { background: var(--danger); color: #fff; }
+
         /* 공통 버튼 */
+        .clip-btn { cursor: pointer; opacity: 0.6; }
         .btn-add { background: none; border: 1px solid #333; color: #888; padding: 5px 10px; font-size: 11px; cursor: pointer; border-radius: 4px; }
-        .btn-save { position: fixed; bottom: 30px; right: 30px; background: var(--accent); color: #fff; border: none; padding: 12px 25px; border-radius: 30px; font-weight: bold; cursor: pointer; z-index: 10; }
+        .btn-save { position: fixed; bottom: 30px; right: 30px; background: var(--accent); color: #fff; border: none; padding: 12px 25px; border-radius: 30px; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
 
 <div class="app-container">
     <!-- 1단: 폴더 -->
-    <div class="folder-sidebar">
+    <div class="folder-sidebar" oncontextmenu="return false;">
         <div class="sidebar-title">FOLDERS</div>
         <div id="folder-list"></div>
         <button class="btn-add" onclick="addFolder()" style="margin-top: 20px; width: 100%;">+ NEW FOLDER</button>
     </div>
 
     <!-- 2단: 메모 목록 -->
-    <div class="memo-list-bar">
+    <div class="memo-list-bar" id="memo-list-bar" oncontextmenu="return false;">
         <div class="memo-list-header">
             <span id="current-folder-name" style="font-weight: bold; font-size: 13px;">General</span>
             <button class="btn-add" onclick="addMemo()">+</button>
@@ -71,154 +76,217 @@
 
     <!-- 3단: 에디터 -->
     <main class="editor-view">
-        <div id="date-display">Select a memo to see date</div>
-        <div class="editor-header">
+        <div id="date-display">Select a memo</div>
+        <div style="display:flex; justify-content:space-between; align-items:center;">
             <input type="text" id="title-input" placeholder="Untitled" spellcheck="false">
-            <div class="toolbar">
-                <!-- 클립 모양 아이콘 (SVG) -->
-                <label for="file-upload" class="clip-btn">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>
-                </label>
-                <input type="file" id="file-upload" style="display:none" accept="image/*" onchange="handleImageUpload(event)">
-            </div>
+            <label for="file-upload" class="clip-btn">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>
+            </label>
+            <input type="file" id="file-upload" style="display:none" accept="image/*" onchange="handleImageUpload(event)">
         </div>
         <div class="divider"></div>
-        
-        <!-- 이미지 미리보기 -->
-        <div id="image-preview-container">
-            <button class="remove-img" onclick="removeImage()">✕ Remove</button>
-            <img id="preview-img" src="" alt="attachment">
-        </div>
-
-        <textarea id="content-input" placeholder="Start writing your story..." spellcheck="false"></textarea>
+        <div id="image-preview-container"><img id="preview-img" src=""></div>
+        <textarea id="content-input" placeholder="Writing..." spellcheck="false"></textarea>
         <button class="btn-save" onclick="saveCurrentMemo()">SAVE DATA</button>
     </main>
+</div>
+
+<!-- 우클릭 메뉴들 -->
+<div id="folder-ctx" class="context-menu">
+    <div class="context-menu-item" onclick="renameFolderPrompt()">Rename Folder</div>
+    <div class="context-menu-item" onclick="pasteMemo()">Paste Memo</div>
+    <div class="context-menu-item delete" onclick="deleteFolder()">Delete Folder</div>
+</div>
+
+<div id="memo-ctx" class="context-menu">
+    <div class="context-menu-item" onclick="copyMemo()">Copy</div>
+    <div class="context-menu-item" onclick="moveMemoPrompt()">Move to...</div>
+    <div class="context-menu-item delete" onclick="deleteMemo()">Delete</div>
 </div>
 
 <script>
     let db = JSON.parse(localStorage.getItem('BLACK_SPACE_DB')) || { folders: ['General'], memos: [] };
     let currentFolder = 'General';
     let currentMemoId = null;
-    let currentImageData = null;
+    let clipboardMemo = null;
+    let rightClickedFolder = null;
+    let rightClickedMemoId = null;
 
-    window.onload = () => { renderFolders(); selectFolder('General'); };
+    window.onload = () => { renderFolders(); selectFolder(currentFolder); };
 
     function renderFolders() {
         const list = document.getElementById('folder-list');
         list.innerHTML = db.folders.map(f => `
-            <div class="folder-item ${f === currentFolder ? 'active' : ''}" onclick="selectFolder('${f}')"># ${f}</div>
+            <div class="folder-item ${f === currentFolder ? 'active' : ''}" 
+                 onclick="selectFolder('${f}')" 
+                 oncontextmenu="showFolderCtx(event, '${f}')"># ${f}</div>
         `).join('');
-    }
-
-    function selectFolder(name) {
-        currentFolder = name;
-        document.getElementById('current-folder-name').innerText = name;
-        renderFolders();
-        renderMemoList();
-    }
-
-    function addFolder() {
-        const name = prompt("New Folder Name:");
-        if(name && !db.folders.includes(name)) {
-            db.folders.push(name);
-            saveToStorage();
-            renderFolders();
-        }
     }
 
     function renderMemoList() {
         const list = document.getElementById('memo-list-container');
         const filtered = db.memos.filter(m => m.folder === currentFolder);
         list.innerHTML = filtered.map(m => `
-            <div class="memo-item ${m.id === currentMemoId ? 'active' : ''}" onclick="selectMemo('${m.id}')">
-                <div class="m-date">${formatDate(m.date)}</div>
+            <div class="memo-item ${m.id === currentMemoId ? 'active' : ''}" 
+                 onclick="selectMemo('${m.id}')" 
+                 oncontextmenu="showMemoCtx(event, '${m.id}')">
+                <div class="m-date">${m.date.split('T')[0]}</div>
                 <div class="m-title">${m.title || 'Untitled'}</div>
             </div>
         `).join('');
     }
 
+    function showFolderCtx(e, folder) {
+        e.preventDefault();
+        rightClickedFolder = folder;
+        const ctx = document.getElementById('folder-ctx');
+        ctx.style.display = 'block';
+        ctx.style.left = e.pageX + 'px';
+        ctx.style.top = e.pageY + 'px';
+    }
+
+    function showMemoCtx(e, id) {
+        e.preventDefault();
+        rightClickedMemoId = id;
+        const ctx = document.getElementById('memo-ctx');
+        ctx.style.display = 'block';
+        ctx.style.left = e.pageX + 'px';
+        ctx.style.top = e.pageY + 'px';
+    }
+
+    document.addEventListener('click', () => {
+        document.getElementById('folder-ctx').style.display = 'none';
+        document.getElementById('memo-ctx').style.display = 'none';
+    });
+
+    // [폴더 이름 변경 기능 추가]
+    function renameFolderPrompt() {
+        const oldName = rightClickedFolder;
+        const newName = prompt(`Rename folder '${oldName}' to:`, oldName);
+        
+        if (newName && newName.trim() !== "" && newName !== oldName) {
+            const trimmedName = newName.trim();
+            
+            // 중복 체크
+            if (db.folders.includes(trimmedName)) {
+                return alert("A folder with that name already exists.");
+            }
+
+            // 1. 폴더 배열 업데이트
+            const folderIndex = db.folders.indexOf(oldName);
+            if (folderIndex !== -1) {
+                db.folders[folderIndex] = trimmedName;
+            }
+
+            // 2. 해당 폴더 내 모든 메모의 폴더 이름 일괄 변경
+            db.memos.forEach(memo => {
+                if (memo.folder === oldName) {
+                    memo.folder = trimmedName;
+                }
+            });
+
+            // 3. 현재 보고 있는 폴더가 변경된 폴더면 상태 업데이트
+            if (currentFolder === oldName) {
+                currentFolder = trimmedName;
+                document.getElementById('current-folder-name').innerText = trimmedName;
+            }
+
+            save();
+            renderFolders();
+            renderMemoList();
+            alert("Folder renamed successfully.");
+        }
+    }
+
+    function addFolder() {
+        const name = prompt("New Folder Name:");
+        if(name && !db.folders.includes(name)) { db.folders.push(name); save(); renderFolders(); }
+    }
+
+    function deleteFolder() {
+        if(db.folders.length <= 1) return alert("You must have at least one folder.");
+        if(confirm(`Delete '${rightClickedFolder}' and all memos inside?`)) {
+            db.memos = db.memos.filter(m => m.folder !== rightClickedFolder);
+            db.folders = db.folders.filter(f => f !== rightClickedFolder);
+            currentFolder = db.folders[0];
+            save(); renderFolders(); selectFolder(currentFolder);
+        }
+    }
+
+    function copyMemo() {
+        const memo = db.memos.find(m => m.id === rightClickedMemoId);
+        clipboardMemo = JSON.parse(JSON.stringify(memo));
+        alert("Memo copied.");
+    }
+
+    function pasteMemo() {
+        if(!clipboardMemo) return alert("Nothing to paste.");
+        const newMemo = JSON.parse(JSON.stringify(clipboardMemo));
+        newMemo.id = Date.now().toString();
+        newMemo.folder = rightClickedFolder;
+        newMemo.date = new Date().toISOString();
+        db.memos.unshift(newMemo);
+        save(); renderMemoList();
+    }
+
+    function moveMemoPrompt() {
+        const target = prompt(`Enter folder name: (${db.folders.join(', ')})`);
+        if(target && db.folders.includes(target)) {
+            const memo = db.memos.find(m => m.id === rightClickedMemoId);
+            memo.folder = target;
+            save(); renderMemoList();
+        }
+    }
+
+    function deleteMemo() {
+        db.memos = db.memos.filter(m => m.id !== rightClickedMemoId);
+        if(currentMemoId === rightClickedMemoId) clearEditor();
+        save(); renderMemoList();
+    }
+
+    function selectFolder(name) { currentFolder = name; document.getElementById('current-folder-name').innerText = name; renderFolders(); renderMemoList(); }
     function selectMemo(id) {
         currentMemoId = id;
         const memo = db.memos.find(m => m.id === id);
-        if(memo) {
-            document.getElementById('title-input').value = memo.title;
-            document.getElementById('content-input').value = memo.content;
-            document.getElementById('date-display').innerText = `Last Updated: ${formatDate(memo.date)}`;
-            
-            if(memo.image) {
-                showImage(memo.image);
-            } else {
-                hideImage();
-            }
-            renderMemoList();
-        }
+        document.getElementById('title-input').value = memo.title;
+        document.getElementById('content-input').value = memo.content;
+        document.getElementById('date-display').innerText = `Updated: ${memo.date.replace('T',' ').split('.')[0]}`;
+        if(memo.image) { document.getElementById('preview-img').src = memo.image; document.getElementById('image-preview-container').style.display='block'; }
+        else { document.getElementById('image-preview-container').style.display='none'; }
+        renderMemoList();
     }
-
     function addMemo() {
-        const newId = Date.now().toString();
-        const newMemo = { id: newId, folder: currentFolder, title: '', content: '', date: new Date().toISOString(), image: null };
-        db.memos.unshift(newMemo);
-        saveToStorage();
-        selectMemo(newId);
+        const id = Date.now().toString();
+        db.memos.unshift({ id, folder: currentFolder, title: '', content: '', date: new Date().toISOString(), image: null });
+        save(); selectMemo(id);
     }
-
-    // 이미지 처리 로직
-    function handleImageUpload(event) {
-        const file = event.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                currentImageData = e.target.result;
-                showImage(currentImageData);
-            };
-            reader.readAsDataURL(file);
-        }
-    }
-
-    function showImage(src) {
-        const container = document.getElementById('image-preview-container');
-        const img = document.getElementById('preview-img');
-        img.src = src;
-        container.style.display = 'block';
-        currentImageData = src;
-    }
-
-    function removeImage() {
-        hideImage();
-        currentImageData = null;
-    }
-
-    function hideImage() {
-        document.getElementById('image-preview-container').style.display = 'none';
-    }
-
     function saveCurrentMemo() {
-        if(!currentMemoId) return alert("Select a memo first.");
         const memo = db.memos.find(m => m.id === currentMemoId);
         if(memo) {
             memo.title = document.getElementById('title-input').value;
             memo.content = document.getElementById('content-input').value;
-            memo.image = currentImageData;
             memo.date = new Date().toISOString();
-            
-            saveToStorage();
-            document.getElementById('date-display').innerText = `Last Updated: ${formatDate(memo.date)}`;
-            renderMemoList();
-            
+            save(); renderMemoList();
             const btn = document.querySelector('.btn-save');
             btn.innerText = "SAVED!";
             setTimeout(() => btn.innerText = "SAVE DATA", 1500);
         }
     }
-
-    function formatDate(isoString) {
-        const d = new Date(isoString);
-        return `${d.getFullYear()}-${(d.getMonth()+1).toString().padStart(2,'0')}-${d.getDate().toString().padStart(2,'0')} ${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
+    function handleImageUpload(e) {
+        const file = e.target.files[0];
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            const memo = db.memos.find(m => m.id === currentMemoId);
+            if(memo) {
+                memo.image = event.target.result;
+                document.getElementById('preview-img').src = memo.image;
+                document.getElementById('image-preview-container').style.display='block';
+            }
+        };
+        reader.readAsDataURL(file);
     }
-
-    function saveToStorage() { localStorage.setItem('BLACK_SPACE_DB', JSON.stringify(db)); }
+    function clearEditor() { document.getElementById('title-input').value=''; document.getElementById('content-input').value=''; document.getElementById('image-preview-container').style.display='none'; }
+    function save() { localStorage.setItem('BLACK_SPACE_DB', JSON.stringify(db)); }
 </script>
-
 </body>
 </html>
-

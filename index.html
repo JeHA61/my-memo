@@ -5,148 +5,219 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>BLACK MEMO</title>
     <style>
-        /* [레이아웃 고수] 127.0.0.1:5500에서 보던 기존 디자인 그대로 유지 */
+        /* [공통] 127.0.0.1:5500 오리지널 블랙 감성 고수 */
+        :root {
+            --bg-color: #000;
+            --line-color: #222;
+            --text-main: #fff;
+            --text-sub: #666;
+            --accent: #007AFF;
+        }
+
         body, html {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
-            background-color: #000; /* 완전한 검은색 배경 */
-            color: #fff;
-            font-family: -apple-system, sans-serif;
+            margin: 0; padding: 0;
+            width: 100%; height: 100%;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
             overflow: hidden;
         }
 
-        /* 상단 바: 기존 디자인의 깔끔함 유지 */
+        /* [내비게이션] 화면 전환 레이아웃 */
+        .screen { display: none; width: 100%; height: 100%; flex-direction: column; }
+        .screen.active { display: flex; }
+
+        /* [상단 바] 미니멀 디자인 */
         .header {
             height: 60px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             padding: 0 20px;
-            border-bottom: 1px solid #222;
+            border-bottom: 1px solid var(--line-color);
         }
 
-        .title {
-            font-size: 18px;
-            font-weight: bold;
-            letter-spacing: -0.5px;
-        }
+        .nav-link { color: var(--text-sub); font-size: 14px; text-decoration: none; cursor: pointer; }
+        .nav-link:hover { color: var(--text-main); }
 
-        .actions {
+        /* [1. 목록 화면] 폴더 디자인 개선 */
+        .folder-list { padding: 20px; flex: 1; overflow-y: auto; }
+        .folder-item {
             display: flex;
-            gap: 15px;
-        }
-
-        /* 기능 버튼: 디자인을 해치지 않는 미니멀한 스타일 */
-        .action-btn {
-            background: none;
-            border: 1px solid #444;
-            color: #fff;
-            padding: 6px 12px;
-            border-radius: 6px;
-            font-size: 14px;
+            align-items: center;
+            padding: 18px;
+            background: #0a0a0a;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            border: 1px solid #1a1a1a;
             cursor: pointer;
         }
+        .folder-item:active { background: #151515; }
+        .folder-icon { margin-right: 15px; font-size: 20px; color: #ffd60a; }
+        .folder-info { flex: 1; }
+        .folder-name { font-size: 16px; font-weight: 500; }
 
-        .action-btn:active {
-            background-color: #222;
+        /* [2. 편집 화면] 요구사항 반영 */
+        .editor-container { padding: 25px 20px; flex: 1; display: flex; flex-direction: column; }
+        
+        #memo-title {
+            background: transparent; border: none;
+            color: var(--text-main); font-size: 26px; font-weight: 700;
+            margin-bottom: 15px; outline: none; width: 100%;
         }
 
-        /* 메모 입력창: 전체 화면 레이아웃 */
-        #memo-editor {
-            width: 100%;
-            height: calc(100% - 60px);
-            background: transparent;
-            color: #fff;
-            border: none;
-            padding: 20px;
-            font-size: 16px;
-            line-height: 1.6;
-            outline: none;
-            resize: none;
-            box-sizing: border-box;
+        /* [요구사항] 제목과 본문을 나누는 선 */
+        .divider {
+            height: 1px;
+            background-color: var(--line-color);
+            margin-bottom: 20px;
         }
 
-        /* 파일 입력 숨김 처리 */
-        #file-input {
-            display: none;
+        #memo-body {
+            background: transparent; border: none;
+            color: #ccc; font-size: 17px; line-height: 1.7;
+            flex: 1; outline: none; resize: none; width: 100%;
         }
 
-        /* 첨부 이미지 미리보기 (기존 레이아웃 방해 금지) */
-        #preview-container {
-            position: absolute;
-            bottom: 20px;
-            left: 20px;
-            display: flex;
-            gap: 10px;
-            pointer-events: none;
+        /* [새 폴더 모달] 프리미엄 디자인 */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8); display: none; z-index: 1000;
+            justify-content: center; align-items: center;
         }
+        .modal-content {
+            background: #1c1c1e; width: 85%; max-width: 320px;
+            border-radius: 14px; padding: 20px; text-align: center;
+        }
+        .modal-content h3 { margin-top: 0; font-size: 17px; }
+        .modal-content input {
+            width: 100%; background: #2c2c2e; border: none;
+            color: #fff; padding: 10px; border-radius: 8px;
+            margin: 15px 0; box-sizing: border-box; outline: none;
+        }
+        .modal-btns { display: flex; border-top: 1px solid #38383a; margin-top: 10px; }
+        .modal-btns button {
+            flex: 1; background: none; border: none; color: var(--accent);
+            padding: 15px; font-size: 17px; cursor: pointer;
+        }
+        .modal-btns button:first-child { border-right: 1px solid #38383a; color: #ff3b30; }
 
-        .preview-img {
-            width: 50px;
-            height: 50px;
-            object-fit: cover;
-            border-radius: 4px;
-            border: 1px solid #444;
-        }
+        /* 첨부파일/저장 버튼 스타일 */
+        .action-btn { background: none; border: none; color: var(--accent); font-size: 16px; cursor: pointer; }
+        .preview-area { display: flex; gap: 10px; padding: 0 20px 20px; }
+        .preview-img { width: 60px; height: 60px; object-fit: cover; border-radius: 8px; border: 1px solid #333; }
+        #file-input { display: none; }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <div class="title">BLACK MEMO</div>
-        <div class="actions">
-            <!-- 사용자가 요구한 첨부파일 및 저장 버튼 복구 -->
-            <button class="action-btn" onclick="document.getElementById('file-input').click()">첨부</button>
-            <button class="action-btn" onclick="saveMemo()">저장</button>
+    <!-- [화면 1] 목록 및 폴더 화면 -->
+    <div id="screen-list" class="screen active">
+        <div class="header">
+            <div class="nav-link" onclick="openModal()">+ NEW FOLDER</div>
+            <div class="nav-link" onclick="goToEditor()" style="color: var(--accent);">새 메모 작성</div>
+        </div>
+        <div class="folder-list" id="folder-container">
+            <!-- 폴더 예시 -->
+            <div class="folder-item" onclick="goToEditor('일기장')">
+                <span class="folder-icon">📁</span>
+                <div class="folder-info">
+                    <div class="folder-name">나의 일기장</div>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- 메모 작성 영역 -->
-    <textarea id="memo-editor" placeholder="기록을 시작하세요..."></textarea>
-    
-    <!-- 파일 처리 레이어 -->
-    <input type="file" id="file-input" accept="image/*" multiple onchange="handleFiles(this.files)">
-    <div id="preview-container"></div>
+    <!-- [화면 2] 메모 편집 화면 -->
+    <div id="screen-editor" class="screen">
+        <div class="header">
+            <div class="nav-link" onclick="goToList()">← 목록</div>
+            <div style="display: flex; gap: 15px;">
+                <button class="action-btn" onclick="document.getElementById('file-input').click()">첨부</button>
+                <button class="action-btn" onclick="saveMemo()" style="font-weight: bold;">저장</button>
+            </div>
+        </div>
+        <div class="editor-container">
+            <input type="text" id="memo-title" placeholder="제목" spellcheck="false">
+            <div class="divider"></div>
+            <textarea id="memo-body" placeholder="내용을 입력하세요..." spellcheck="false"></textarea>
+        </div>
+        <div id="preview-area" class="preview-area"></div>
+        <input type="file" id="file-input" accept="image/*" multiple onchange="handleFiles(this.files)">
+    </div>
+
+    <!-- 폴더 생성 모달 -->
+    <div id="modal" class="modal-overlay">
+        <div class="modal-content">
+            <h3>새로운 폴더</h3>
+            <input type="text" id="new-folder-name" placeholder="폴더 이름">
+            <div class="modal-btns">
+                <button onclick="closeModal()">취소</button>
+                <button onclick="addFolder()">생성</button>
+            </div>
+        </div>
+    </div>
 
     <script>
-        const editor = document.getElementById('memo-editor');
-
-        // [기능 1] 페이지 접속 시 저장된 메모 불러오기
-        window.onload = () => {
-            const savedData = localStorage.getItem('black_memo_data');
-            if (savedData) {
-                editor.value = savedData;
-            }
-        };
-
-        // [기능 2] 저장 버튼 클릭 시 브라우저에 즉시 저장
-        function saveMemo() {
-            const content = editor.value;
-            localStorage.setItem('black_memo_data', content);
-            alert('성공적으로 저장되었습니다.');
+        // 화면 전환 로직 (폴더 간 이동 문제 해결)
+        function goToEditor(title = "") {
+            document.getElementById('screen-list').classList.remove('active');
+            document.getElementById('screen-editor').classList.add('active');
+            if(title) document.getElementById('memo-title').value = title;
         }
 
-        // [기능 3] 첨부파일 기능 구현 (이미지 선택 시 미리보기)
+        function goToList() {
+            document.getElementById('screen-editor').classList.remove('active');
+            document.getElementById('screen-list').classList.add('active');
+        }
+
+        // 폴더 추가 기능 및 UI 업데이트
+        function openModal() { document.getElementById('modal').style.display = 'flex'; }
+        function closeModal() { document.getElementById('modal').style.display = 'none'; }
+
+        function addFolder() {
+            const name = document.getElementById('new-folder-name').value;
+            if(name) {
+                const container = document.getElementById('folder-container');
+                const div = document.createElement('div');
+                div.className = 'folder-item';
+                div.onclick = () => goToEditor(name);
+                div.innerHTML = `<span class="folder-icon">📁</span><div class="folder-info"><div class="folder-name">${name}</div></div>`;
+                container.appendChild(div);
+                document.getElementById('new-folder-name').value = '';
+                closeModal();
+            }
+        }
+
+        // 저장 기능 (LocalStorage)
+        function saveMemo() {
+            const title = document.getElementById('memo-title').value;
+            const body = document.getElementById('memo-body').value;
+            localStorage.setItem('last_memo_title', title);
+            localStorage.setItem('last_memo_body', body);
+            alert('저장되었습니다.');
+        }
+
+        // 첨부파일 핸들러
         function handleFiles(files) {
-            const container = document.getElementById('preview-container');
+            const preview = document.getElementById('preview-area');
             for (let i = 0; i < files.length; i++) {
                 const reader = new FileReader();
-                reader.onload = function(e) {
+                reader.onload = (e) => {
                     const img = document.createElement('img');
                     img.src = e.target.result;
                     img.className = 'preview-img';
-                    container.appendChild(img);
-                }
+                    preview.appendChild(img);
+                };
                 reader.readAsDataURL(files[i]);
             }
         }
 
-        // [추가 보안] 작성 중 창을 닫아도 날아가지 않게 자동 저장
-        editor.addEventListener('input', () => {
-            localStorage.setItem('black_memo_data', editor.value);
-        });
+        // 초기 데이터 로드
+        window.onload = () => {
+            document.getElementById('memo-title').value = localStorage.getItem('last_memo_title') || '';
+            document.getElementById('memo-body').value = localStorage.getItem('last_memo_body') || '';
+        };
     </script>
 </body>
 </html>

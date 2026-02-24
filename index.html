@@ -2,83 +2,98 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <!-- 보안성 강화: CSP 설정 (스크립트 및 스타일 허용 범위 제한) -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline'; img-src 'self' ;">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <link rel="manifest" href="/manifest.json"> <!-- 앱 화를 위한 매니페스트 -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <!-- 보안성 강화 (CSP): 외부 스크립트 차단 -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline';">
+    <link rel="manifest" href="manifest.json">
     <title>BLACK SPACE</title>
     <style>
-        /* [기존 디자인 유지] */
-        body, html { margin: 0; padding: 0; background: #000; color: #fff; font-family: sans-serif; height: 100%; overflow: hidden; }
+        /* 127.0.0.1:5500 오리지널 레이아웃 복제 */
+        :root { --bg: #000; --text: #fff; --sub: #666; --line: #1a1a1a; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body, html { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: -apple-system, sans-serif; height: 100%; overflow: hidden; }
+
+        /* 상단 바 */
+        .header { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; border-bottom: 1px solid var(--line); height: 60px; }
+        .btn { background: none; border: none; font-size: 14px; cursor: pointer; padding: 5px; transition: 0.2s; }
+        .btn-folder { color: var(--sub); }
+        .btn-save { color: var(--text); font-weight: 600; }
+
+        /* 에디터 메인 */
+        .container { display: flex; flex-direction: column; height: calc(100% - 60px); padding: 25px 20px; }
         
-        /* 헤더: 기존 127.0.0.1 스타일 유지 */
-        .header { display: flex; justify-content: space-between; padding: 20px; border-bottom: 1px solid #111; }
-        .folder-btn { color: #666; font-size: 14px; cursor: pointer; border: none; background: none; }
-        .save-btn { color: #fff; font-weight: bold; cursor: pointer; border: none; background: none; }
+        /* 제목 영역 */
+        #title { background: none; border: none; color: var(--text); font-size: 28px; font-weight: 700; outline: none; width: 100%; padding-bottom: 15px; }
 
-        /* 에디터 영역 */
-        .editor { display: flex; flex-direction: column; height: 100%; padding: 20px; }
-        
-        /* 제목 입력창 */
-        #title { 
-            background: none; border: none; color: #fff; font-size: 24px; 
-            outline: none; width: 100%; padding-bottom: 10px;
-        }
+        /* [요구사항] 제목-본문 구분선 */
+        .divider { height: 1px; background: var(--line); margin-bottom: 20px; }
 
-        /* [요구사항] 제목과 본문을 나누는 선 */
-        .divider { height: 1px; background: #222; margin-bottom: 20px; }
+        /* 본문 영역 */
+        #content { background: none; border: none; color: #ccc; font-size: 17px; line-height: 1.6; outline: none; width: 100%; flex: 1; resize: none; }
 
-        /* 본문 입력창 */
-        #content { 
-            background: none; border: none; color: #ccc; font-size: 16px; 
-            outline: none; width: 100%; flex: 1; resize: none; line-height: 1.6;
-        }
-
-        /* [요구사항] 세련된 뉴 폴더 입력창 (과하지 않은 블랙 디자인) */
-        #folder-modal {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.9); z-index: 100; justify-content: center; align-items: center;
-        }
-        .modal-box { background: #111; padding: 30px; border-radius: 8px; width: 80%; max-width: 300px; text-align: center; }
-        .modal-box input { width: 100%; background: #000; border: 1px solid #333; color: #fff; padding: 10px; margin-bottom: 15px; }
-        .modal-box button { background: none; border: none; color: #007AFF; font-size: 16px; cursor: pointer; }
+        /* 폴더 모달 (디자인 최소화) */
+        #modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 1000; justify-content: center; align-items: center; }
+        .modal-inner { width: 80%; max-width: 300px; text-align: center; }
+        .modal-inner input { width: 100%; background: #111; border: 1px solid var(--line); color: #fff; padding: 12px; margin-bottom: 20px; outline: none; }
+        .modal-btns { display: flex; gap: 10px; }
+        .modal-btns button { flex: 1; padding: 10px; background: none; border: 1px solid var(--line); color: #fff; cursor: pointer; }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <button class="folder-btn" onclick="showFolderModal()">+ NEW FOLDER</button>
-        <button class="save-btn" onclick="saveData()">SAVE</button>
+        <button class="btn btn-folder" onclick="toggleModal(true)">+ NEW FOLDER</button>
+        <button class="btn btn-save" onclick="saveMemo()">SAVE</button>
     </div>
 
-    <div class="editor">
+    <div class="container">
         <input type="text" id="title" placeholder="Title" spellcheck="false">
-        <div class="divider"></div> <!-- 구분선 -->
-        <textarea id="content" placeholder="Start typing..." spellcheck="false"></textarea>
+        <div class="divider"></div>
+        <textarea id="content" placeholder="Writing..." spellcheck="false"></textarea>
     </div>
 
-    <!-- 폴더 생성 모달 -->
-    <div id="folder-modal">
-        <div class="modal-box">
-            <input type="text" id="folder-input" placeholder="Folder Name">
-            <button onclick="createFolder()">CREATE</button>
-            <button onclick="hideFolderModal()" style="color:#666; margin-left: 10px;">CANCEL</button>
+    <!-- 폴더 이동/생성 모달 -->
+    <div id="modal" onclick="if(event.target==this) toggleModal(false)">
+        <div class="modal-inner">
+            <input type="text" id="folder-name" placeholder="Folder Name">
+            <div class="modal-btns">
+                <button onclick="toggleModal(false)">CLOSE</button>
+                <button onclick="moveFolder()" style="background: #fff; color: #000;">MOVE</button>
+            </div>
         </div>
     </div>
 
     <script>
-        // 데이터 동기화 및 저장 (iCloud 대응을 위한 로컬 스토리지 활용)
-        function saveData() {
-            const data = {
-                title: document.getElementById('title').value,
-                content: document.getElementById('content').value
-            };
-            localStorage.setItem('black_space_data', JSON.stringify(data));
-            alert('Saved');
+        // [기능 1] 폴더 간 이동 로직
+        // 정적 페이지에서 폴더 이동은 URL 경로 변경으로 구현
+        function moveFolder() {
+            const folder = document.getElementById('folder-name').value;
+            if(folder) {
+                // 현재 경로를 기반으로 해당 폴더 내의 index.html로 이동
+                window.location.href = `./${folder}/index.html`;
+            }
         }
 
+        function toggleModal(show) {
+            document.getElementById('modal').style.display = show ? 'flex' : 'none';
+        }
+
+        // [기능 2] 보안 및 로컬 저장 (iCloud 동기화 기반)
+        function saveMemo() {
+            const data = {
+                title: document.getElementById('title').value,
+                content: document.getElementById('content').value,
+                time: new Date().getTime()
+            };
+            localStorage.setItem('black_space_current', JSON.stringify(data));
+            alert('Saved to Local Storage');
+        }
+
+        // 페이지 로드 시 데이터 복구
         window.onload = () => {
-            const saved = localStorage.getItem('black_space_data');
+            const saved = localStorage.getItem('black_space_current');
             if(saved) {
                 const parsed = JSON.parse(saved);
                 document.getElementById('title').value = parsed.title;
@@ -86,15 +101,9 @@
             }
         };
 
-        function showFolderModal() { document.getElementById('folder-modal').style.display = 'flex'; }
-        function hideFolderModal() { document.getElementById('folder-modal').style.display = 'none'; }
-        
-        function createFolder() {
-            const folderName = document.getElementById('folder-input').value;
-            if(folderName) {
-                // 폴더 간 이동 로직: 현재는 단순 파일 구조이나, 추후 fetch(path)로 확장 가능
-                window.location.href = `/${folderName}/index.html`; 
-            }
+        // PWA 서비스 워커 등록 (앱 설치용)
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js');
         }
     </script>
 </body>

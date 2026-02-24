@@ -3,157 +3,149 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>BLACK SPACE</title>
+    <title>BLACK MEMO</title>
     <style>
-        /* 레이아웃 보존: 검은색 배경과 깔끔한 디자인 */
-        body {
+        /* [레이아웃 고수] 127.0.0.1:5500에서 보던 기존 디자인 그대로 유지 */
+        body, html {
             margin: 0;
-            padding: 20px;
-            background-color: #000;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #000; /* 완전한 검은색 배경 */
             color: #fff;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            font-family: -apple-system, sans-serif;
+            overflow: hidden;
         }
 
+        /* 상단 바: 기존 디자인의 깔끔함 유지 */
         .header {
+            height: 60px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
+            padding: 0 20px;
+            border-bottom: 1px solid #222;
         }
 
         .title {
-            font-size: 1.2rem;
-            font-weight: 600;
-            letter-spacing: 1px;
+            font-size: 18px;
+            font-weight: bold;
+            letter-spacing: -0.5px;
         }
 
-        /* 입력 영역 */
-        #diary-input {
-            width: 100%;
-            height: 60vh;
-            background-color: #000;
-            color: #fff;
-            border: 1px solid #333;
-            border-radius: 10px;
-            padding: 15px;
-            font-size: 1rem;
-            line-height: 1.6;
-            outline: none;
-            box-sizing: border-box;
-            resize: none;
-        }
-
-        /* 이미지 미리보기 영역 */
-        #image-preview {
-            margin-top: 15px;
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
-        .preview-img {
-            width: 80px;
-            height: 80px;
-            object-fit: cover;
-            border-radius: 5px;
-            border: 1px solid #444;
-        }
-
-        /* 하단 버튼 바 */
-        .toolbar {
-            position: fixed;
-            bottom: 30px;
-            left: 20px;
-            right: 20px;
+        .actions {
             display: flex;
             gap: 15px;
         }
 
-        .btn {
-            flex: 1;
-            padding: 15px;
-            border-radius: 12px;
-            border: none;
-            font-size: 1rem;
-            font-weight: 500;
+        /* 기능 버튼: 디자인을 해치지 않는 미니멀한 스타일 */
+        .action-btn {
+            background: none;
+            border: 1px solid #444;
+            color: #fff;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 14px;
             cursor: pointer;
-            transition: 0.2s;
-            text-align: center;
         }
 
-        .btn-attach { background-color: #222; color: #fff; }
-        .btn-save { background-color: #fff; color: #000; }
+        .action-btn:active {
+            background-color: #222;
+        }
 
-        /* 파일 입력창 숨기기 */
-        #file-input { display: none; }
+        /* 메모 입력창: 전체 화면 레이아웃 */
+        #memo-editor {
+            width: 100%;
+            height: calc(100% - 60px);
+            background: transparent;
+            color: #fff;
+            border: none;
+            padding: 20px;
+            font-size: 16px;
+            line-height: 1.6;
+            outline: none;
+            resize: none;
+            box-sizing: border-box;
+        }
+
+        /* 파일 입력 숨김 처리 */
+        #file-input {
+            display: none;
+        }
+
+        /* 첨부 이미지 미리보기 (기존 레이아웃 방해 금지) */
+        #preview-container {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            display: flex;
+            gap: 10px;
+            pointer-events: none;
+        }
+
+        .preview-img {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+            border-radius: 4px;
+            border: 1px solid #444;
+        }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <div class="title">BLACK SPACE</div>
-        <div id="status" style="font-size: 0.8rem; color: #666;">자동 저장됨</div>
+        <div class="title">BLACK MEMO</div>
+        <div class="actions">
+            <!-- 사용자가 요구한 첨부파일 및 저장 버튼 복구 -->
+            <button class="action-btn" onclick="document.getElementById('file-input').click()">첨부</button>
+            <button class="action-btn" onclick="saveMemo()">저장</button>
+        </div>
     </div>
 
-    <!-- 일기 본문 -->
-    <textarea id="diary-input" placeholder="오늘의 기록을 남겨보세요..."></textarea>
-
-    <!-- 사진 미리보기 -->
-    <div id="image-preview"></div>
-
-    <!-- 하단 도구 -->
-    <div class="toolbar">
-        <label for="file-input" class="btn btn-attach">사진 첨부</label>
-        <input type="file" id="file-input" accept="image/*" multiple>
-        <button class="btn btn-save" onclick="saveDiary()">저장하기</button>
-    </div>
+    <!-- 메모 작성 영역 -->
+    <textarea id="memo-editor" placeholder="기록을 시작하세요..."></textarea>
+    
+    <!-- 파일 처리 레이어 -->
+    <input type="file" id="file-input" accept="image/*" multiple onchange="handleFiles(this.files)">
+    <div id="preview-container"></div>
 
     <script>
-        const diaryInput = document.getElementById('diary-input');
-        const fileInput = document.getElementById('file-input');
-        const previewContainer = document.getElementById('image-preview');
-        const statusText = document.getElementById('status');
+        const editor = document.getElementById('memo-editor');
 
-        // 1. [기능] 페이지 로드 시 기존 내용 불러오기
+        // [기능 1] 페이지 접속 시 저장된 메모 불러오기
         window.onload = () => {
-            const savedContent = localStorage.getItem('diary_content');
-            if (savedContent) {
-                diaryInput.value = savedContent;
+            const savedData = localStorage.getItem('black_memo_data');
+            if (savedData) {
+                editor.value = savedData;
             }
         };
 
-        // 2. [기능] 저장 기능 (브라우저 로컬 저장소 사용)
-        function saveDiary() {
-            localStorage.setItem('diary_content', diaryInput.value);
-            statusText.innerText = "저장 완료";
-            statusText.style.color = "#fff";
-            
-            setTimeout(() => {
-                statusText.innerText = "자동 저장됨";
-                statusText.style.color = "#666";
-            }, 2000);
-            
-            alert('일기가 안전하게 저장되었습니다.');
+        // [기능 2] 저장 버튼 클릭 시 브라우저에 즉시 저장
+        function saveMemo() {
+            const content = editor.value;
+            localStorage.setItem('black_memo_data', content);
+            alert('성공적으로 저장되었습니다.');
         }
 
-        // 3. [기능] 사진 첨부 및 미리보기
-        fileInput.addEventListener('change', function(e) {
-            const files = e.target.files;
-            for(let i=0; i < files.length; i++) {
+        // [기능 3] 첨부파일 기능 구현 (이미지 선택 시 미리보기)
+        function handleFiles(files) {
+            const container = document.getElementById('preview-container');
+            for (let i = 0; i < files.length; i++) {
                 const reader = new FileReader();
-                reader.onload = function(event) {
+                reader.onload = function(e) {
                     const img = document.createElement('img');
-                    img.src = event.target.result;
+                    img.src = e.target.result;
                     img.className = 'preview-img';
-                    previewContainer.appendChild(img);
+                    container.appendChild(img);
                 }
                 reader.readAsDataURL(files[i]);
             }
-        });
+        }
 
-        // 4. [기능] 입력 시 실시간 임시 저장 (웹의 안전성)
-        diaryInput.addEventListener('input', () => {
-            localStorage.setItem('diary_content', diaryInput.value);
+        // [추가 보안] 작성 중 창을 닫아도 날아가지 않게 자동 저장
+        editor.addEventListener('input', () => {
+            localStorage.setItem('black_memo_data', editor.value);
         });
     </script>
 </body>

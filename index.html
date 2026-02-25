@@ -6,18 +6,18 @@
     <title>BLACK SPACE OS - Monochrome Edition</title>
     <style>
         /* [디자인 시스템 - 무채색 & 블랙] */
-        :root { 
-            --bg: #000; 
-            --sidebar-bg: #0a0a0a; 
-            --list-bg: #111; 
-            --text: #fff; 
-            --sub: #777; 
-            --line: #222; 
+        :root {
+            --bg: #000;
+            --sidebar-bg: #0a0a0a;
+            --list-bg: #111;
+            --text: #fff;
+            --sub: #777;
+            --line: #222;
             --accent: #ffffff; /* 화이트 포인트 */
             --hover: #1a1a1a;
             --danger: #333; /* 삭제 등 위험 요소도 무채색으로 유지 */
         }
-        
+
         * { box-sizing: border-box; margin: 0; padding: 0; background: transparent; }
         body, html { height: 100%; background: var(--bg); color: var(--text); font-family: -apple-system, sans-serif; overflow: hidden; }
 
@@ -25,7 +25,8 @@
 
         /* 1단: 폴더 사이드바 */
         .folder-sidebar { width: 190px; background: var(--sidebar-bg); border-right: 1px solid var(--line); padding: 20px 12px; display: flex; flex-direction: column; }
-        .sidebar-title { font-size: 11px; color: var(--sub); letter-spacing: 2px; margin-bottom: 25px; padding-left: 10px; font-weight: bold; }
+        .folder-sidebar-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; padding: 0 4px 0 10px; }
+        .sidebar-title { font-size: 11px; color: var(--sub); letter-spacing: 2px; font-weight: bold; }
         .folder-list { flex: 1; overflow-y: auto; }
         .folder-item { padding: 12px 15px; font-size: 13px; color: var(--sub); cursor: pointer; border-radius: 6px; margin-bottom: 4px; transition: 0.2s; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .folder-item:hover { background: var(--hover); color: #fff; }
@@ -65,15 +66,70 @@
         .context-menu-item:hover { background: #333; color: #fff; }
         .context-menu-item.delete { color: #777; }
         .context-menu-item.delete:hover { background: #442222; color: #ff5555; }
+        .context-menu-item.label { cursor: default; color: #5f5f5f; font-size: 10px; letter-spacing: 1px; padding-top: 8px; padding-bottom: 4px; }
+        .context-menu-item.label:hover { background: transparent; color: #5f5f5f; }
+        .context-menu-item.move-empty { cursor: default; color: #555; }
+        .context-menu-item.move-empty:hover { background: transparent; color: #555; }
 
         /* 공통 버튼 */
-        .btn-add-folder { background: none; border: 1px solid #222; color: #555; padding: 10px; font-size: 10px; cursor: pointer; border-radius: 4px; margin-top: 15px; transition: 0.2s; }
-        .btn-add-folder:hover { border-color: #555; color: #fff; }
+        .btn-add-folder { background: #111; border: 1px solid #2b2b2b; color: #888; width: 26px; height: 26px; font-size: 16px; line-height: 1; cursor: pointer; border-radius: 4px; transition: 0.2s; }
+        .btn-add-folder:hover { border-color: #555; color: #fff; background: #191919; }
         .btn-add-memo { background: #222; color: #fff; border: 1px solid #333; width: 26px; height: 26px; border-radius: 4px; cursor: pointer; font-size: 16px; }
         .btn-add-memo:hover { background: #fff; color: #000; }
-        .btn-save { position: fixed; bottom: 40px; right: 40px; background: #fff; color: #000; border: none; padding: 12px 30px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 12px; letter-spacing: 1px; }
         .clip-btn { cursor: pointer; opacity: 0.4; transition: 0.3s; }
         .clip-btn:hover { opacity: 1; }
+
+        /* GitHub sync controls (corner, low distraction) */
+        .sync-fab {
+            position: fixed;
+            left: 22px;
+            bottom: 28px;
+            z-index: 1200;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            align-items: flex-start;
+        }
+        .sync-main-btn {
+            border: 1px solid #333;
+            background: #111;
+            color: #999;
+            border-radius: 4px;
+            font-size: 10px;
+            letter-spacing: 1px;
+            padding: 8px 12px;
+            cursor: pointer;
+        }
+        .sync-main-btn:hover { color: #fff; border-color: #555; }
+        .sync-panel {
+            display: none;
+            flex-direction: column;
+            gap: 6px;
+            background: rgba(0, 0, 0, 0.92);
+            border: 1px solid #222;
+            border-radius: 6px;
+            padding: 8px;
+            min-width: 78px;
+        }
+        .sync-panel.open { display: flex; }
+        .sync-action-btn {
+            border: 1px solid #2b2b2b;
+            background: #101010;
+            color: #8b8b8b;
+            border-radius: 4px;
+            font-size: 10px;
+            letter-spacing: 0.8px;
+            padding: 8px 10px;
+            cursor: pointer;
+            text-align: left;
+        }
+        .sync-action-btn:hover { color: #fff; border-color: #555; background: #161616; }
+
+        @media (max-width: 768px) {
+            .sync-fab { left: 14px; bottom: 16px; }
+            .sync-main-btn { font-size: 9px; padding: 7px 10px; }
+            .sync-action-btn { font-size: 10px; padding: 9px 10px; }
+        }
     </style>
 </head>
 <body>
@@ -81,9 +137,11 @@
 <div class="app-container">
     <!-- 1단 -->
     <div class="folder-sidebar" oncontextmenu="return false;">
-        <div class="sidebar-title">FOLDERS</div>
+        <div class="folder-sidebar-head">
+            <div class="sidebar-title">FOLDERS</div>
+            <button class="btn-add-folder" onclick="addFolder()" title="Add folder" aria-label="Add folder">+</button>
+        </div>
         <div id="folder-list" class="folder-list"></div>
-        <button class="btn-add-folder" onclick="addFolder()">NEW FOLDER</button>
     </div>
 
     <!-- 2단 -->
@@ -108,7 +166,6 @@
         <div class="divider"></div>
         <div id="image-preview-container"><img id="preview-img" src=""></div>
         <textarea id="content-input" placeholder="Type something..." spellcheck="false"></textarea>
-        <button class="btn-save" onclick="saveCurrentMemo()">SAVE DOCUMENT</button>
     </main>
 </div>
 
@@ -121,196 +178,629 @@
 
 <div id="memo-ctx" class="context-menu">
     <div class="context-menu-item" onclick="copyMemo()">Copy</div>
-    <div class="context-menu-item" onclick="moveMemo()">Move to...</div>
+    <div class="context-menu-item label">MOVE TO</div>
+    <div id="memo-move-targets"></div>
     <div class="context-menu-item delete" onclick="deleteMemo()">Delete</div>
 </div>
 
+<!-- corner sync controls -->
+<div id="sync-fab" class="sync-fab">
+    <button class="sync-main-btn" onclick="toggleSyncPanel(event)" title="Open GitHub sync menu">SYNC</button>
+    <div id="sync-panel" class="sync-panel">
+        <button class="sync-action-btn" onclick="configureGitHubSync()" title="Ctrl/Cmd+Shift+G">SET</button>
+        <button class="sync-action-btn" onclick="pullFromGitHub()" title="Ctrl/Cmd+Shift+U">PULL</button>
+        <button class="sync-action-btn" onclick="pushToGitHub()" title="Ctrl/Cmd+Shift+I">PUSH</button>
+        <button class="sync-action-btn" onclick="syncWithGitHub()" title="Ctrl/Cmd+Shift+Y">SYNC</button>
+    </div>
+</div>
+
+<script src="./sync.js"></script>
 <script>
-    let db = JSON.parse(localStorage.getItem('BLACK_SPACE_OS_V2')) || { folders: ['General'], memos: [] };
+    const Sync = window.BlackSpaceSync || null;
+    const STORAGE_KEY = 'BLACK_SPACE_OS_V2';
+
+    let db = loadLocalDb();
     let currentFolder = db.folders[0] || 'General';
     let currentMemoId = null;
     let targetFolder = null;
     let targetMemoId = null;
     let memoClipboard = null;
+    let remoteFileSha = null;
+    let autoSaveTimer = null;
+    const AUTO_SAVE_DELAY_MS = 700;
+    const LONG_PRESS_MS = 480;
+    const LONG_PRESS_MOVE_PX = 12;
+    let longPressTimer = null;
+    let longPressState = null;
+    let suppressNextTapFolder = null;
+    let suppressNextTapMemo = null;
 
-    window.onload = () => { renderFolders(); selectFolder(currentFolder); };
+    window.onload = () => {
+        if (!db.folders.includes(currentFolder)) currentFolder = db.folders[0] || 'General';
+        renderFolders();
+        selectFolder(currentFolder);
+        setupAutoSaveBindings();
+        setupLongPressBindings();
+    };
+
+    function loadLocalDb() {
+        let parsed = null;
+        try {
+            parsed = JSON.parse(localStorage.getItem(STORAGE_KEY));
+        } catch (_err) {
+            parsed = null;
+        }
+        if (Sync) return Sync.normalizeDb(parsed);
+        return parsed || { folders: ['General'], memos: [], memoTombstones: {}, lastSyncedAt: null };
+    }
+
+    function saveDB() {
+        if (Sync) db = Sync.normalizeDb(db);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
+    }
+
+    function escapeHtml(text) {
+        return String(text || '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    function escapeJsSingle(text) {
+        return String(text || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+    }
+
+    function setFolderState(nextFolder) {
+        currentFolder = nextFolder;
+        document.getElementById('current-folder-label').innerText = nextFolder;
+    }
+
+    function toggleSyncPanel(event) {
+        if (event) event.stopPropagation();
+        const panel = document.getElementById('sync-panel');
+        panel.classList.toggle('open');
+    }
+
+    function scheduleAutoSave() {
+        if (!currentMemoId) return;
+        if (autoSaveTimer) clearTimeout(autoSaveTimer);
+        autoSaveTimer = setTimeout(() => {
+            autoSaveTimer = null;
+            saveCurrentMemo();
+        }, AUTO_SAVE_DELAY_MS);
+    }
+
+    function flushAutoSave() {
+        if (!autoSaveTimer) return;
+        clearTimeout(autoSaveTimer);
+        autoSaveTimer = null;
+        saveCurrentMemo();
+    }
+
+    function setupAutoSaveBindings() {
+        const titleInput = document.getElementById('title-input');
+        const contentInput = document.getElementById('content-input');
+
+        titleInput.addEventListener('input', scheduleAutoSave);
+        contentInput.addEventListener('input', scheduleAutoSave);
+
+        titleInput.addEventListener('blur', flushAutoSave);
+        contentInput.addEventListener('blur', flushAutoSave);
+
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) flushAutoSave();
+        });
+
+        window.addEventListener('beforeunload', flushAutoSave);
+    }
+
+    function clearLongPressTimer() {
+        if (!longPressTimer) return;
+        clearTimeout(longPressTimer);
+        longPressTimer = null;
+    }
+
+    function openFolderCtxAt(pageX, pageY, folder) {
+        targetFolder = folder;
+        const ctx = document.getElementById('folder-ctx');
+        ctx.style.display = 'block';
+        ctx.style.left = pageX + 'px';
+        ctx.style.top = pageY + 'px';
+    }
+
+    function openMemoCtxAt(pageX, pageY, id) {
+        targetMemoId = id;
+        renderMemoMoveTargets();
+        const ctx = document.getElementById('memo-ctx');
+        ctx.style.display = 'block';
+        ctx.style.left = pageX + 'px';
+        ctx.style.top = pageY + 'px';
+    }
+
+    function bindLongPress(container, itemSelector, dataKey, onLongPress) {
+        if (!container) return;
+
+        container.addEventListener(
+            'touchstart',
+            (event) => {
+                const item = event.target.closest(itemSelector);
+                if (!item) return;
+                const key = item.getAttribute(dataKey);
+                if (!key) return;
+                const touch = event.touches && event.touches[0];
+                if (!touch) return;
+
+                clearLongPressTimer();
+                longPressState = {
+                    key,
+                    startX: touch.pageX,
+                    startY: touch.pageY,
+                    triggered: false,
+                };
+
+                longPressTimer = setTimeout(() => {
+                    if (!longPressState || longPressState.key !== key) return;
+                    longPressState.triggered = true;
+                    onLongPress(key, longPressState.startX, longPressState.startY);
+                }, LONG_PRESS_MS);
+            },
+            { passive: true }
+        );
+
+        container.addEventListener(
+            'touchmove',
+            (event) => {
+                if (!longPressState) return;
+                const touch = event.touches && event.touches[0];
+                if (!touch) return;
+                const dx = Math.abs(touch.pageX - longPressState.startX);
+                const dy = Math.abs(touch.pageY - longPressState.startY);
+                if (dx > LONG_PRESS_MOVE_PX || dy > LONG_PRESS_MOVE_PX) {
+                    clearLongPressTimer();
+                    longPressState = null;
+                }
+            },
+            { passive: true }
+        );
+
+        const touchEndHandler = (event) => {
+            if (!longPressState) return;
+            const wasTriggered = longPressState.triggered;
+            clearLongPressTimer();
+            longPressState = null;
+            if (wasTriggered) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+        };
+
+        container.addEventListener('touchend', touchEndHandler, { passive: false });
+        container.addEventListener('touchcancel', touchEndHandler, { passive: false });
+    }
+
+    function setupLongPressBindings() {
+        const folderList = document.getElementById('folder-list');
+        const memoList = document.getElementById('memo-list-container');
+
+        bindLongPress(folderList, '.folder-item', 'data-folder', (folder, pageX, pageY) => {
+            suppressNextTapFolder = folder;
+            openFolderCtxAt(pageX, pageY, folder);
+        });
+
+        bindLongPress(memoList, '.memo-item', 'data-id', (id, pageX, pageY) => {
+            suppressNextTapMemo = id;
+            openMemoCtxAt(pageX, pageY, id);
+        });
+    }
+
+    function clearEditor() {
+        currentMemoId = null;
+        document.getElementById('title-input').value = '';
+        document.getElementById('content-input').value = '';
+        document.getElementById('date-display').innerText = 'Select or create a memo';
+        document.getElementById('image-preview-container').style.display = 'none';
+    }
+
+    function ensureCurrentFolder() {
+        if (!db.folders.includes(currentFolder)) {
+            currentFolder = db.folders[0] || 'General';
+        }
+        setFolderState(currentFolder);
+    }
 
     function renderFolders() {
         const list = document.getElementById('folder-list');
-        list.innerHTML = db.folders.map(f => `
-            <div class="folder-item ${f === currentFolder ? 'active' : ''}" 
-                 onclick="selectFolder('${f}')" 
-                 oncontextmenu="showFolderCtx(event, '${f}')">${f}</div>
-        `).join('');
+        list.innerHTML = db.folders
+            .map((f) => {
+                const escaped = escapeHtml(f);
+                const arg = escapeJsSingle(f);
+                return `
+            <div class="folder-item ${f === currentFolder ? 'active' : ''}"
+                 data-folder="${escaped}"
+                 onclick="selectFolder('${arg}')"
+                 oncontextmenu="showFolderCtx(event, '${arg}')">${escaped}</div>
+        `;
+            })
+            .join('');
     }
 
     function renderMemoList() {
         const list = document.getElementById('memo-list-container');
-        const filtered = db.memos.filter(m => m.folder === currentFolder);
-        list.innerHTML = filtered.map(m => `
-            <div class="memo-item ${m.id === currentMemoId ? 'active' : ''}" 
-                 onclick="selectMemo('${m.id}')" 
-                 oncontextmenu="showMemoCtx(event, '${m.id}')">
-                <div class="m-title">${m.title || 'Untitled'}</div>
-                <div class="m-date">${m.date.split('T')[0]}</div>
+        const filtered = Sync ? Sync.getVisibleMemos(db, currentFolder) : db.memos.filter((m) => m.folder === currentFolder && !m.deletedAt);
+
+        list.innerHTML = filtered
+            .map((m) => {
+                const title = escapeHtml(m.title || 'Untitled');
+                const dateText = (m.updatedAt || m.date || '').split('T')[0];
+                const idArg = escapeJsSingle(m.id);
+                return `
+            <div class="memo-item ${m.id === currentMemoId ? 'active' : ''}"
+                 data-id="${escapeHtml(m.id)}"
+                 onclick="selectMemo('${idArg}')"
+                 oncontextmenu="showMemoCtx(event, '${idArg}')">
+                <div class="m-title">${title}</div>
+                <div class="m-date">${dateText}</div>
             </div>
-        `).join('');
+        `;
+            })
+            .join('');
     }
 
-    // [중요: 폴더 이름 변경 로직 수정]
     function renameFolder() {
         const oldName = targetFolder;
         const newName = prompt(`Rename '${oldName}' to:`, oldName);
-        
-        if (newName && newName.trim() !== "" && newName !== oldName) {
+
+        if (newName && newName.trim() !== '' && newName !== oldName) {
             const nextName = newName.trim();
-            
-            // 1. 이름 중복 검사
-            if (db.folders.includes(nextName)) {
-                return alert("This folder name already exists.");
-            }
+            if (db.folders.includes(nextName)) return alert('This folder name already exists.');
 
-            // 2. 폴더 배열에서 정확히 해당 인덱스만 수정
             const folderIndex = db.folders.indexOf(oldName);
-            if (folderIndex !== -1) {
-                db.folders[folderIndex] = nextName;
-            }
+            if (folderIndex !== -1) db.folders[folderIndex] = nextName;
 
-            // 3. 해당 폴더 내 메모들의 소속 폴더명 변경
-            db.memos.forEach(m => {
-                if (m.folder === oldName) m.folder = nextName;
+            db.memos.forEach((m) => {
+                if (m.folder === oldName) {
+                    m.folder = nextName;
+                    if (Sync) Sync.touchMemo(m);
+                }
             });
 
-            // 4. 현재 활성화된 폴더였다면 상태 업데이트
-            if (currentFolder === oldName) {
-                currentFolder = nextName;
-                document.getElementById('current-folder-label').innerText = nextName;
-            }
+            if (currentFolder === oldName) setFolderState(nextName);
 
-            saveDB(); 
-            renderFolders(); 
+            saveDB();
+            renderFolders();
             renderMemoList();
         }
     }
 
     function addFolder() {
-        const name = prompt("New Folder Name:");
-        if(name && !db.folders.includes(name.trim())) {
-            db.folders.push(name.trim());
-            saveDB(); renderFolders();
-        }
+        const name = prompt('New Folder Name:');
+        const next = name ? name.trim() : '';
+        if (!next) return;
+        if (db.folders.includes(next)) return;
+        db.folders.push(next);
+        saveDB();
+        renderFolders();
     }
 
     function deleteFolder() {
-        if(db.folders.length <= 1) return alert("At least one folder is required.");
-        if(confirm(`Delete '${targetFolder}'?`)) {
-            db.memos = db.memos.filter(m => m.folder !== targetFolder);
-            db.folders = db.folders.filter(f => f !== targetFolder);
-            currentFolder = db.folders[0];
-            saveDB(); renderFolders(); selectFolder(currentFolder);
-        }
+        if (db.folders.length <= 1) return alert('At least one folder is required.');
+        if (!confirm(`Delete '${targetFolder}'?`)) return;
+
+        const deleteTargets = db.memos.filter((m) => m.folder === targetFolder && !m.deletedAt);
+        deleteTargets.forEach((memo) => {
+            if (Sync) {
+                Sync.markMemoDeleted(db, memo.id);
+            } else {
+                memo.deletedAt = new Date().toISOString();
+            }
+        });
+
+        db.folders = db.folders.filter((f) => f !== targetFolder);
+        currentFolder = db.folders[0] || 'General';
+        saveDB();
+        renderFolders();
+        selectFolder(currentFolder);
     }
 
     function selectFolder(name) {
-        currentFolder = name;
-        document.getElementById('current-folder-label').innerText = name;
-        renderFolders(); renderMemoList();
+        if (suppressNextTapFolder === name) {
+            suppressNextTapFolder = null;
+            return;
+        }
+        suppressNextTapFolder = null;
+        flushAutoSave();
+        setFolderState(name);
+        renderFolders();
+        renderMemoList();
     }
 
     function selectMemo(id) {
+        if (suppressNextTapMemo === id) {
+            suppressNextTapMemo = null;
+            return;
+        }
+        suppressNextTapMemo = null;
+        flushAutoSave();
         currentMemoId = id;
-        const memo = db.memos.find(m => m.id === id);
-        if(!memo) return;
+        const memo = db.memos.find((m) => m.id === id && !m.deletedAt);
+        if (!memo) {
+            clearEditor();
+            return;
+        }
+
         document.getElementById('title-input').value = memo.title;
         document.getElementById('content-input').value = memo.content;
-        document.getElementById('date-display').innerText = `MODIFIED: ${memo.date.replace('T',' ').split('.')[0]}`;
+        document.getElementById('date-display').innerText = `MODIFIED: ${(memo.updatedAt || memo.date).replace('T', ' ').split('.')[0]}`;
+
         const imgCont = document.getElementById('image-preview-container');
-        if(memo.image) { document.getElementById('preview-img').src = memo.image; imgCont.style.display='block'; }
-        else { imgCont.style.display='none'; }
+        if (memo.image) {
+            document.getElementById('preview-img').src = memo.image;
+            imgCont.style.display = 'block';
+        } else {
+            imgCont.style.display = 'none';
+        }
         renderMemoList();
     }
 
     function addMemo() {
+        flushAutoSave();
         const id = Date.now().toString();
-        db.memos.unshift({ id, folder: currentFolder, title: '', content: '', date: new Date().toISOString(), image: null });
-        saveDB(); selectMemo(id);
+        const now = new Date().toISOString();
+        db.memos.unshift({ id, folder: currentFolder, title: '', content: '', date: now, updatedAt: now, deletedAt: null, image: null });
+        saveDB();
+        selectMemo(id);
     }
 
     function saveCurrentMemo() {
-        const memo = db.memos.find(m => m.id === currentMemoId);
-        if(memo) {
-            memo.title = document.getElementById('title-input').value;
-            memo.content = document.getElementById('content-input').value;
-            memo.date = new Date().toISOString();
-            saveDB(); renderMemoList();
-            alert("Changes saved.");
-        }
+        const memo = db.memos.find((m) => m.id === currentMemoId && !m.deletedAt);
+        if (!memo) return false;
+
+        memo.title = document.getElementById('title-input').value;
+        memo.content = document.getElementById('content-input').value;
+        memo.deletedAt = null;
+        if (Sync) Sync.touchMemo(memo);
+        else memo.date = new Date().toISOString();
+
+        document.getElementById('date-display').innerText = `MODIFIED: ${(memo.updatedAt || memo.date).replace('T', ' ').split('.')[0]}`;
+        saveDB();
+        renderMemoList();
+        return true;
     }
 
     function handleImageUpload(e) {
         const file = e.target.files[0];
+        if (!file) return;
+
         const reader = new FileReader();
         reader.onload = (ev) => {
-            const memo = db.memos.find(m => m.id === currentMemoId);
-            if(memo) {
-                memo.image = ev.target.result;
-                document.getElementById('preview-img').src = memo.image;
-                document.getElementById('image-preview-container').style.display = 'block';
-            }
+            const memo = db.memos.find((m) => m.id === currentMemoId && !m.deletedAt);
+            if (!memo) return;
+
+            memo.image = ev.target.result;
+            if (Sync) Sync.touchMemo(memo);
+            document.getElementById('preview-img').src = memo.image;
+            document.getElementById('image-preview-container').style.display = 'block';
+            saveDB();
+            renderMemoList();
         };
         reader.readAsDataURL(file);
     }
 
     function copyMemo() {
-        const memo = db.memos.find(m => m.id === targetMemoId);
+        const memo = db.memos.find((m) => m.id === targetMemoId && !m.deletedAt);
+        if (!memo) return;
         memoClipboard = JSON.stringify(memo);
-        alert("Memo copied.");
+        alert('Memo copied.');
     }
 
     function pasteMemo() {
-        if(!memoClipboard) return;
+        if (!memoClipboard) return;
         const newMemo = JSON.parse(memoClipboard);
+        const now = new Date().toISOString();
         newMemo.id = Date.now().toString();
         newMemo.folder = targetFolder;
-        newMemo.date = new Date().toISOString();
+        newMemo.date = now;
+        newMemo.updatedAt = now;
+        newMemo.deletedAt = null;
         db.memos.unshift(newMemo);
-        saveDB(); renderMemoList();
+        saveDB();
+        renderMemoList();
     }
 
-    function moveMemo() {
-        const target = prompt(`Move to: (${db.folders.join(', ')})`);
-        if(target && db.folders.includes(target)) {
-            const memo = db.memos.find(m => m.id === targetMemoId);
-            memo.folder = target;
-            saveDB(); renderMemoList();
+    function moveMemoTo(target) {
+        if (!target || !db.folders.includes(target)) return;
+        const memo = db.memos.find((m) => m.id === targetMemoId && !m.deletedAt);
+        if (!memo) return;
+        if (memo.folder === target) return;
+        memo.folder = target;
+        if (Sync) Sync.touchMemo(memo);
+
+        const movedOutOfCurrentFolder = memo.id === currentMemoId && currentFolder !== target;
+        if (movedOutOfCurrentFolder) clearEditor();
+
+        saveDB();
+        renderMemoList();
+        document.getElementById('memo-ctx').style.display = 'none';
+    }
+
+    function renderMemoMoveTargets() {
+        const container = document.getElementById('memo-move-targets');
+        const memo = db.memos.find((m) => m.id === targetMemoId && !m.deletedAt);
+        if (!memo) {
+            container.innerHTML = '<div class="context-menu-item move-empty">No target</div>';
+            return;
         }
+
+        const targets = db.folders.filter((folder) => folder !== memo.folder);
+        if (!targets.length) {
+            container.innerHTML = '<div class="context-menu-item move-empty">No other folder</div>';
+            return;
+        }
+
+        container.innerHTML = targets
+            .map((folder) => {
+                const label = escapeHtml(folder);
+                const arg = escapeJsSingle(folder);
+                return `<div class="context-menu-item" onclick="moveMemoTo('${arg}')">${label}</div>`;
+            })
+            .join('');
     }
 
     function deleteMemo() {
-        if(confirm("Delete this memo?")) {
-            db.memos = db.memos.filter(m => m.id !== targetMemoId);
-            saveDB(); renderMemoList();
+        if (!confirm('Delete this memo?')) return;
+        if (!targetMemoId) return;
+        if (Sync) {
+            Sync.markMemoDeleted(db, targetMemoId);
+        } else {
+            db.memos = db.memos.filter((m) => m.id !== targetMemoId);
         }
+        if (currentMemoId === targetMemoId) clearEditor();
+        saveDB();
+        renderMemoList();
     }
 
     function showFolderCtx(e, folder) {
-        e.preventDefault(); targetFolder = folder;
-        const ctx = document.getElementById('folder-ctx');
-        ctx.style.display = 'block'; ctx.style.left = e.pageX + 'px'; ctx.style.top = e.pageY + 'px';
+        e.preventDefault();
+        openFolderCtxAt(e.pageX, e.pageY, folder);
     }
 
     function showMemoCtx(e, id) {
-        e.preventDefault(); targetMemoId = id;
-        const ctx = document.getElementById('memo-ctx');
-        ctx.style.display = 'block'; ctx.style.left = e.pageX + 'px'; ctx.style.top = e.pageY + 'px';
+        e.preventDefault();
+        openMemoCtxAt(e.pageX, e.pageY, id);
     }
+
+    function getGitHubConfigOrThrow() {
+        if (!Sync) throw new Error('sync.js is not loaded.');
+        const cfg = Sync.loadGitHubConfig();
+        const missing = Sync.validateGitHubConfig(cfg);
+        if (missing.length) {
+            throw new Error(`GitHub setting is incomplete: ${missing.join(', ')} (Ctrl/Cmd+Shift+G)`);
+        }
+        return cfg;
+    }
+
+    function formatError(err) {
+        if (!err) return 'Unknown error';
+        if (err.status) return `${err.message} (HTTP ${err.status})`;
+        return err.message || String(err);
+    }
+
+    function configureGitHubSync() {
+        if (!Sync) return alert('sync.js is not loaded.');
+        const existing = Sync.loadGitHubConfig();
+
+        const owner = prompt('GitHub owner/user:', existing.owner || '');
+        if (owner === null) return;
+
+        const repo = prompt('Private repo name:', existing.repo || '');
+        if (repo === null) return;
+
+        const branch = prompt('Branch name:', existing.branch || 'main');
+        if (branch === null) return;
+
+        const path = prompt('Data file path:', existing.path || 'data/notes.json');
+        if (path === null) return;
+
+        const token = prompt('Fine-grained PAT (Contents: Read and write):', existing.token || '');
+        if (token === null) return;
+
+        const config = { owner, repo, branch, path, token };
+        const missing = Sync.validateGitHubConfig(config);
+        if (missing.length) return alert('Missing fields: ' + missing.join(', '));
+
+        const persistToken = confirm('토큰을 장기 저장할까요?\n확인: localStorage 저장\n취소: 현재 브라우저 세션에만 저장');
+        Sync.saveGitHubConfig(config, { persistToken });
+        alert('GitHub sync configured.\nShortcut: Ctrl/Cmd+Shift+Y to sync');
+    }
+
+    async function pullFromGitHub() {
+        try {
+            flushAutoSave();
+            const config = getGitHubConfigOrThrow();
+            const pulled = await Sync.pullDb(config);
+            if (!pulled.exists) return alert('Remote file not found. Push first to create it.');
+            db = Sync.mergeDb(db, pulled.db);
+            remoteFileSha = pulled.sha;
+            ensureCurrentFolder();
+            saveDB();
+            renderFolders();
+            selectFolder(currentFolder);
+            alert('Pull complete (merged).');
+        } catch (err) {
+            alert('Pull failed: ' + formatError(err));
+        }
+    }
+
+    async function pushToGitHub() {
+        try {
+            flushAutoSave();
+            const config = getGitHubConfigOrThrow();
+            const pushed = await Sync.pushDb(config, db, remoteFileSha, 'Manual push from BLACK SPACE OS');
+            db = pushed.db;
+            remoteFileSha = pushed.sha;
+            saveDB();
+            alert('Push complete.');
+        } catch (err) {
+            alert('Push failed: ' + formatError(err));
+        }
+    }
+
+    async function syncWithGitHub() {
+        try {
+            flushAutoSave();
+            const config = getGitHubConfigOrThrow();
+            const result = await Sync.syncDb(config, db);
+            db = result.db;
+            remoteFileSha = result.sha;
+            ensureCurrentFolder();
+            saveDB();
+            renderFolders();
+            selectFolder(currentFolder);
+            alert('Sync complete: ' + result.mode);
+        } catch (err) {
+            alert('Sync failed: ' + formatError(err));
+        }
+    }
+
+    document.addEventListener('keydown', (event) => {
+        if (!(event.ctrlKey || event.metaKey) || !event.shiftKey) return;
+        const key = event.key.toUpperCase();
+
+        if (key === 'G') {
+            event.preventDefault();
+            configureGitHubSync();
+            return;
+        }
+        if (key === 'U') {
+            event.preventDefault();
+            pullFromGitHub();
+            return;
+        }
+        if (key === 'I') {
+            event.preventDefault();
+            pushToGitHub();
+            return;
+        }
+        if (key === 'Y') {
+            event.preventDefault();
+            syncWithGitHub();
+        }
+    });
 
     document.addEventListener('click', () => {
         document.getElementById('folder-ctx').style.display = 'none';
         document.getElementById('memo-ctx').style.display = 'none';
+        document.getElementById('sync-panel').classList.remove('open');
     });
 
-    function saveDB() { localStorage.setItem('BLACK_SPACE_OS_V2', JSON.stringify(db)); }
+    window.configureGitHubSync = configureGitHubSync;
+    window.moveMemoTo = moveMemoTo;
+    window.pullFromGitHub = pullFromGitHub;
+    window.pushToGitHub = pushToGitHub;
+    window.syncWithGitHub = syncWithGitHub;
+    window.toggleSyncPanel = toggleSyncPanel;
 </script>
 </body>
 </html>

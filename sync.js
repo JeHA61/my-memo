@@ -61,6 +61,7 @@
         }
 
         const memoTombstones = normalizeTombstones(base.memoTombstones);
+        const todoTombstones = normalizeTombstones(base.todoTombstones);
 
         const memos = Array.isArray(base.memos)
             ? base.memos.map((memo, index) => {
@@ -88,6 +89,23 @@
               })
             : [];
 
+        const todos = Array.isArray(base.todos)
+            ? base.todos.map((todo, index) => {
+                  const source = todo && typeof todo === 'object' ? todo : {};
+                  const id = source.id ? String(source.id) : 'todo-legacy-' + String(index);
+                  const updatedAt = toIsoOr(source.updatedAt, now);
+                  const deletedAt = toIsoOr(source.deletedAt, null);
+
+                  return {
+                      id,
+                      text: String(source.text || ''),
+                      done: source.done === true,
+                      updatedAt,
+                      deletedAt,
+                  };
+              })
+            : [];
+
         memos.forEach((memo) => {
             const tombTs = memoTombstones[memo.id] || null;
             const combinedDeleted = maxIso(memo.deletedAt, tombTs);
@@ -98,82 +116,96 @@
             }
         });
 
+        todos.forEach((todo) => {
+            const tombTs = todoTombstones[todo.id] || null;
+            const combinedDeleted = maxIso(todo.deletedAt, tombTs);
+            if (combinedDeleted) {
+                todo.deletedAt = combinedDeleted;
+                todo.updatedAt = maxIso(todo.updatedAt, combinedDeleted);
+                todoTombstones[todo.id] = combinedDeleted;
+            }
+        });
+
         const folders = Array.from(folderSet);
         if (!folders.length) folders.push('General');
 
         memos.sort((a, b) => toTs(b.updatedAt) - toTs(a.updatedAt));
+        todos.sort((a, b) => toTs(b.updatedAt) - toTs(a.updatedAt));
 
         return {
             folders,
             memos,
             memoTombstones,
+            todos,
+            todoTombstones,
             lastSyncedAt: toIsoOr(base.lastSyncedAt, null),
         };
     }
 
-    function pickNewerMemo(a, b) {
+    function pickNewerRecord(a, b) {
         if (!a && !b) return null;
         if (!a) return clone(b);
         if (!b) return clone(a);
         return toTs(a.updatedAt) >= toTs(b.updatedAt) ? clone(a) : clone(b);
     }
 
-    function mergeDb(localDb, remoteDb) {
-        const local = normalizeDb(localDb);
-        const remote = normalizeDb(remoteDb);
+    function mergeRecordCollections(localItems, remoteItems, localTombstones, remoteTombstones) {
+        const localById = new Map((Array.isArray(localItems) ? localItems : []).map((item) => [item.id, item]));
+        const remoteById = new Map((Array.isArray(remoteItems) ? remoteItems : []).map((item) => [item.id, item]));
+        const localTombs = localTombstones && typeof localTombstones === 'object' ? localTombstones : {};
+        const remoteTombs = remoteTombstones && typeof remoteTombstones === 'object' ? remoteTombstones : {};
 
-        const localById = new Map(local.memos.map((memo) => [memo.id, memo]));
-        const remoteById = new Map(remote.memos.map((memo) => [memo.id, memo]));
-
-        const idSet = new Set([
-            ...localById.keys(),
-            ...remoteById.keys(),
-            ...Object.keys(local.memoTombstones),
-            ...Object.keys(remote.memoTombstones),
-        ]);
-
-        const mergedMemos = [];
-        const mergedTombstones = { ...local.memoTombstones };
+        const idSet = new Set([...localById.keys(), ...remoteById.keys(), ...Object.keys(localTombs), ...Object.keys(remoteTombs)]);
+        const mergedItems = [];
+        const mergedTombstones = { ...localTombs };
 
         idSet.forEach((id) => {
-            const localMemo = localById.get(id) || null;
-            const remoteMemo = remoteById.get(id) || null;
-
-            const memoDeleteTs = maxIso(localMemo && localMemo.deletedAt, remoteMemo && remoteMemo.deletedAt);
-            const tombDeleteTs = maxIso(local.memoTombstones[id], remote.memoTombstones[id]);
-            const finalDeleteTs = maxIso(memoDeleteTs, tombDeleteTs);
-
-            const newerMemo = pickNewerMemo(localMemo, remoteMemo);
+            const localItem = localById.get(id) || null;
+            const remoteItem = remoteById.get(id) || null;
+            const itemDeleteTs = maxIso(localItem && localItem.deletedAt, remoteItem && remoteItem.deletedAt);
+            const tombDeleteTs = maxIso(localTombs[id], remoteTombs[id]);
+            const finalDeleteTs = maxIso(itemDeleteTs, tombDeleteTs);
+            const newerItem = pickNewerRecord(localItem, remoteItem);
 
             if (finalDeleteTs) {
                 mergedTombstones[id] = finalDeleteTs;
-                if (newerMemo) {
-                    newerMemo.deletedAt = finalDeleteTs;
-                    newerMemo.updatedAt = maxIso(newerMemo.updatedAt, finalDeleteTs);
-                    mergedMemos.push(newerMemo);
+                if (newerItem) {
+                    newerItem.deletedAt = finalDeleteTs;
+                    newerItem.updatedAt = maxIso(newerItem.updatedAt, finalDeleteTs);
+                    mergedItems.push(newerItem);
                 }
                 return;
             }
 
-            if (!newerMemo) return;
-            newerMemo.deletedAt = null;
-            mergedMemos.push(newerMemo);
+            if (!newerItem) return;
+            newerItem.deletedAt = null;
+            mergedItems.push(newerItem);
         });
 
+        mergedItems.sort((a, b) => toTs(b.updatedAt) - toTs(a.updatedAt));
+        return { items: mergedItems, tombstones: mergedTombstones };
+    }
+
+    function mergeDb(localDb, remoteDb) {
+        const local = normalizeDb(localDb);
+        const remote = normalizeDb(remoteDb);
+        const mergedMemosResult = mergeRecordCollections(local.memos, remote.memos, local.memoTombstones, remote.memoTombstones);
+        const mergedTodosResult = mergeRecordCollections(local.todos, remote.todos, local.todoTombstones, remote.todoTombstones);
+
         const folderSet = new Set([...local.folders, ...remote.folders]);
-        mergedMemos.forEach((memo) => {
+        mergedMemosResult.items.forEach((memo) => {
             if (!memo.deletedAt) folderSet.add(memo.folder);
         });
 
         const folders = Array.from(folderSet);
         if (!folders.length) folders.push('General');
 
-        mergedMemos.sort((a, b) => toTs(b.updatedAt) - toTs(a.updatedAt));
-
         return {
             folders,
-            memos: mergedMemos,
-            memoTombstones: mergedTombstones,
+            memos: mergedMemosResult.items,
+            memoTombstones: mergedMemosResult.tombstones,
+            todos: mergedTodosResult.items,
+            todoTombstones: mergedTodosResult.tombstones,
             lastSyncedAt: maxIso(local.lastSyncedAt, remote.lastSyncedAt),
         };
     }
@@ -199,6 +231,27 @@
         return db;
     }
 
+    function touchTodo(todo, nextDone, iso) {
+        const now = iso || nowIso();
+        if (typeof nextDone === 'boolean') todo.done = nextDone;
+        todo.updatedAt = now;
+        todo.deletedAt = null;
+        return todo;
+    }
+
+    function markTodoDeleted(db, id, iso) {
+        const now = iso || nowIso();
+        if (!db.todoTombstones || typeof db.todoTombstones !== 'object') db.todoTombstones = {};
+        db.todoTombstones[id] = maxIso(db.todoTombstones[id], now);
+
+        const todo = Array.isArray(db.todos) ? db.todos.find((item) => item.id === id) : null;
+        if (todo) {
+            todo.deletedAt = maxIso(todo.deletedAt, now);
+            todo.updatedAt = maxIso(todo.updatedAt, now);
+        }
+        return db;
+    }
+
     function getVisibleMemos(db, folder) {
         const source = Array.isArray(db.memos) ? db.memos : [];
         return source.filter((memo) => {
@@ -206,6 +259,16 @@
             if (!folder) return true;
             return memo.folder === folder;
         });
+    }
+
+    function getVisibleTodos(db) {
+        const source = Array.isArray(db.todos) ? db.todos : [];
+        const visible = source.filter((todo) => !todo.deletedAt);
+        visible.sort((a, b) => {
+            if (a.done !== b.done) return a.done ? 1 : -1;
+            return toTs(b.updatedAt) - toTs(a.updatedAt);
+        });
+        return visible;
     }
 
     function encodeBase64Utf8(text) {
@@ -252,7 +315,7 @@
 
         if (!parsed || typeof parsed !== 'object') return null;
         if (parsed.db) return normalizeDb(parsed.db);
-        if (parsed.folders || parsed.memos) return normalizeDb(parsed);
+        if (parsed.folders || parsed.memos || parsed.todos) return normalizeDb(parsed);
         return null;
     }
 
@@ -526,7 +589,10 @@
         mergeDb,
         touchMemo,
         markMemoDeleted,
+        touchTodo,
+        markTodoDeleted,
         getVisibleMemos,
+        getVisibleTodos,
         serializeRemotePayload,
         parseRemotePayload,
         validateGitHubConfig,

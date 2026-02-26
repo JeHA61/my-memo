@@ -1,10 +1,13 @@
-const CACHE_NAME = 'black-space-os-v1';
+const CACHE_NAME = 'black-space-os-v4';
 const APP_SHELL = [
   './',
   './index.html',
   './sync.js',
   './manifest.webmanifest',
-  './icon.svg'
+  './icon-bs-v4.svg',
+  './icon-192-v4.png',
+  './icon-512-v4.png',
+  './apple-touch-icon-v4.png'
 ];
 
 self.addEventListener('install', (event) => {
@@ -38,6 +41,32 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  const isSameOrigin = url.origin === self.location.origin;
+  const isNavigation = event.request.mode === 'navigate';
+  const acceptsHtml = (event.request.headers.get('accept') || '').includes('text/html');
+  const isHtml = isNavigation || acceptsHtml;
+
+  // Ensure app code updates quickly: HTML uses network-first.
+  if (isSameOrigin && isHtml) {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          if (response && response.status === 200) {
+            const copy = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+          }
+          return response;
+        })
+        .catch(async () => {
+          const cached = await caches.match(event.request);
+          if (cached) return cached;
+          return caches.match('./index.html');
+        })
+    );
+    return;
+  }
+
+  // Static assets: cache-first for fast load.
   event.respondWith(
     caches.match(event.request).then((cached) => {
       if (cached) return cached;

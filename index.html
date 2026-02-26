@@ -7,9 +7,11 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="BLACK SPACE OS">
-    <link rel="manifest" href="./manifest.webmanifest">
-    <link rel="icon" href="./icon.svg" type="image/svg+xml">
-    <link rel="apple-touch-icon" href="./icon.svg">
+    <link rel="manifest" href="./manifest.webmanifest?v=4">
+    <link rel="icon" href="./icon-192-v4.png?v=4" sizes="192x192" type="image/png">
+    <link rel="icon" href="./icon-bs-v4.svg?v=4" type="image/svg+xml">
+    <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon-v4.png?v=4">
+    <link rel="apple-touch-icon-precomposed" sizes="180x180" href="./apple-touch-icon-v4.png?v=4">
     <title>BLACK SPACE OS - Monochrome Edition</title>
     <style>
         /* [디자인 시스템 - 무채색 & 블랙] */
@@ -132,10 +134,139 @@
         }
         .sync-action-btn:hover { color: #fff; border-color: #555; background: #161616; }
 
+        .todo-fab {
+            position: fixed;
+            right: 98px;
+            bottom: 40px;
+            z-index: 1190;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 8px;
+        }
+        .todo-main-btn {
+            border: 1px solid #333;
+            background: #111;
+            color: #999;
+            border-radius: 4px;
+            font-size: 10px;
+            letter-spacing: 1px;
+            padding: 8px 12px;
+            cursor: pointer;
+        }
+        .todo-main-btn:hover { color: #fff; border-color: #555; }
+        .todo-panel {
+            display: none;
+            width: 270px;
+            background: rgba(0, 0, 0, 0.95);
+            border: 1px solid #222;
+            border-radius: 10px;
+            padding: 10px;
+            box-shadow: 0 20px 35px rgba(0, 0, 0, 0.55);
+        }
+        .todo-panel.open { display: block; }
+        .todo-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            font-size: 10px;
+            letter-spacing: 1px;
+            color: #7e7e7e;
+        }
+        .todo-clear-btn {
+            border: 1px solid #2a2a2a;
+            background: #0f0f0f;
+            color: #777;
+            border-radius: 4px;
+            padding: 4px 6px;
+            font-size: 9px;
+            cursor: pointer;
+        }
+        .todo-clear-btn:hover { color: #fff; border-color: #555; }
+        .todo-input-row {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 8px;
+        }
+        .todo-input {
+            flex: 1;
+            border: 1px solid #222;
+            border-radius: 6px;
+            background: #0b0b0b;
+            color: #ddd;
+            font-size: 12px;
+            padding: 8px 9px;
+            outline: none;
+        }
+        .todo-input:focus { border-color: #444; }
+        .todo-add-btn {
+            width: 32px;
+            border: 1px solid #2c2c2c;
+            border-radius: 6px;
+            background: #121212;
+            color: #aaa;
+            font-size: 18px;
+            line-height: 1;
+            cursor: pointer;
+        }
+        .todo-add-btn:hover { color: #fff; border-color: #555; }
+        .todo-list {
+            max-height: 250px;
+            overflow-y: auto;
+            padding-right: 2px;
+        }
+        .todo-item {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            border: 1px solid #1c1c1c;
+            border-radius: 7px;
+            padding: 8px 8px;
+            margin-bottom: 6px;
+            background: #0b0b0b;
+        }
+        .todo-item.done { opacity: 0.6; }
+        .todo-item-check {
+            width: 16px;
+            height: 16px;
+            accent-color: #ffffff;
+            cursor: pointer;
+        }
+        .todo-item-text {
+            flex: 1;
+            font-size: 12px;
+            color: #cfcfcf;
+            word-break: break-word;
+        }
+        .todo-item.done .todo-item-text {
+            text-decoration: line-through;
+            color: #888;
+        }
+        .todo-item-del {
+            border: 1px solid #272727;
+            border-radius: 4px;
+            background: #111;
+            color: #666;
+            font-size: 10px;
+            line-height: 1;
+            padding: 5px 6px;
+            cursor: pointer;
+        }
+        .todo-item-del:hover { color: #ff8080; border-color: #5a2a2a; }
+        .todo-empty {
+            color: #5c5c5c;
+            font-size: 11px;
+            text-align: center;
+            padding: 10px 0;
+        }
+
         @media (max-width: 768px) {
             .sync-fab { left: 14px; bottom: 16px; }
             .sync-main-btn { font-size: 9px; padding: 7px 10px; }
             .sync-action-btn { font-size: 10px; padding: 9px 10px; }
+            .todo-fab { right: 86px; bottom: 16px; }
+            .todo-panel { width: min(88vw, 300px); }
         }
 
         /* App-only layout (PWA standalone, editor-first + left menu) */
@@ -222,14 +353,42 @@
         body.app-mode .folder-sidebar-head { margin-bottom: 12px; padding: 0 2px; }
 
         body.app-mode .sync-fab {
-            left: auto;
-            right: 10px;
-            bottom: calc(env(safe-area-inset-bottom) + 10px);
-            z-index: 1520;
-            opacity: 0.62;
-            transition: opacity 0.2s ease, transform 0.2s ease;
+            top: calc(env(safe-area-inset-top) + 56px);
+            left: 12px;
+            right: auto;
+            bottom: auto;
+            z-index: 1512;
+            display: none;
+            align-items: flex-start;
+            max-width: calc(100vw - 24px);
+            opacity: 1;
+            transform: none;
+            transition: opacity 0.2s ease;
+        }
+        body.app-mode.app-panel-open .sync-fab {
+            display: flex;
         }
         body.app-mode.app-writing .sync-fab {
+            opacity: 0;
+            transform: translateY(10px);
+            pointer-events: none;
+        }
+        body.app-mode .sync-panel {
+            max-width: calc(100vw - 24px);
+        }
+        body.app-mode .todo-fab {
+            right: max(10px, env(safe-area-inset-right));
+            bottom: calc(env(safe-area-inset-bottom) + 10px);
+            z-index: 1520;
+            left: auto;
+            align-items: flex-end;
+            max-width: calc(100vw - 20px - env(safe-area-inset-right));
+        }
+        body.app-mode .todo-panel {
+            width: min(88vw, 300px);
+            max-width: calc(100vw - 20px - env(safe-area-inset-right));
+        }
+        body.app-mode.app-writing .todo-fab {
             opacity: 0;
             transform: translateY(10px);
             pointer-events: none;
@@ -298,6 +457,21 @@
     </div>
 </div>
 
+<div id="todo-fab" class="todo-fab">
+    <button class="todo-main-btn" onclick="toggleTodoPanel(event)" title="Open to-do list">TODO</button>
+    <div id="todo-panel" class="todo-panel">
+        <div class="todo-head">
+            <span id="todo-stats">No tasks</span>
+            <button class="todo-clear-btn" onclick="clearDoneTodos()" title="Clear checked tasks">CLEAR</button>
+        </div>
+        <div class="todo-input-row">
+            <input id="todo-input" class="todo-input" type="text" placeholder="Add task..." maxlength="180" spellcheck="false" onkeydown="handleTodoInputKey(event)">
+            <button class="todo-add-btn" onclick="addTodo()" aria-label="Add to-do">+</button>
+        </div>
+        <div id="todo-list" class="todo-list"></div>
+    </div>
+</div>
+
 <button id="app-panel-toggle" class="app-panel-toggle" onclick="toggleAppPanel(event)" aria-label="Open folders and memos">☰</button>
 <div id="app-panel-backdrop" class="app-panel-backdrop" onclick="closeAppPanel()"></div>
 
@@ -309,6 +483,8 @@
     const SECURITY_PASSPHRASE_KEY = 'BLACK_SPACE_SESSION_PASSPHRASE';
     const SECURITY_TOKEN_VAULT_KEY = 'BLACK_SPACE_TOKEN_VAULT';
     const SECURITY_ITERATIONS = 250000;
+    const APP_BUILD_KEY = 'BLACK_SPACE_APP_BUILD';
+    const APP_BUILD = '2026-02-26-v4';
 
     let db = loadLocalDb();
     let securityConfig = loadSecurityConfig();
@@ -336,11 +512,14 @@
     let appPanelOpen = false;
 
     window.onload = async () => {
+        const ready = await ensureBuildUpToDate();
+        if (!ready) return;
         initializeAppMode();
         setupAppPanelBindings();
         if (!db.folders.includes(currentFolder)) currentFolder = db.folders[0] || 'General';
         renderFolders();
         selectFolder(currentFolder);
+        renderTodos();
         setupAutoSaveBindings();
         setupLongPressBindings();
         await unlockSecurityForSession();
@@ -356,12 +535,42 @@
             parsed = null;
         }
         if (Sync) return Sync.normalizeDb(parsed);
-        return parsed || { folders: ['General'], memos: [], memoTombstones: {}, lastSyncedAt: null };
+        return parsed || { folders: ['General'], memos: [], memoTombstones: {}, todos: [], todoTombstones: {}, lastSyncedAt: null };
     }
 
     function saveDB() {
         if (Sync) db = Sync.normalizeDb(db);
         localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
+    }
+
+    async function ensureBuildUpToDate() {
+        const local = safeStorage('local');
+        if (!local) return true;
+
+        const prev = local.getItem(APP_BUILD_KEY);
+        if (prev === APP_BUILD) return true;
+        local.setItem(APP_BUILD_KEY, APP_BUILD);
+
+        try {
+            if ('serviceWorker' in navigator) {
+                const registrations = await navigator.serviceWorker.getRegistrations();
+                await Promise.all(registrations.map((reg) => reg.unregister()));
+            }
+        } catch (_err) {}
+
+        try {
+            if (typeof caches !== 'undefined' && caches && typeof caches.keys === 'function') {
+                const keys = await caches.keys();
+                const target = keys.filter((key) => String(key).indexOf('black-space-os-') === 0);
+                await Promise.all(target.map((key) => caches.delete(key)));
+            }
+        } catch (_err) {}
+
+        const nextUrl = new URL(window.location.href);
+        nextUrl.searchParams.set('v', '4');
+        nextUrl.searchParams.set('b', String(Date.now()));
+        window.location.replace(nextUrl.toString());
+        return false;
     }
 
     function escapeHtml(text) {
@@ -389,20 +598,73 @@
     }
 
     function detectStandaloneApp() {
-        const mediaStandalone = window.matchMedia && window.matchMedia('(display-mode: standalone)').matches;
+        const mediaStandalone =
+            window.matchMedia &&
+            (
+                window.matchMedia('(display-mode: standalone)').matches ||
+                window.matchMedia('(display-mode: fullscreen)').matches ||
+                window.matchMedia('(display-mode: minimal-ui)').matches
+            );
         const iosStandalone = window.navigator && window.navigator.standalone === true;
         return mediaStandalone || iosStandalone;
+    }
+
+    function applyAppFabLayout() {
+        const syncFab = document.getElementById('sync-fab');
+        const todoFab = document.getElementById('todo-fab');
+        if (!syncFab || !todoFab) return;
+
+        if (!isAppMode) {
+            syncFab.style.display = '';
+            syncFab.style.position = '';
+            syncFab.style.left = '';
+            syncFab.style.right = '';
+            syncFab.style.top = '';
+            syncFab.style.bottom = '';
+            syncFab.style.maxWidth = '';
+            syncFab.style.zIndex = '';
+
+            todoFab.style.position = '';
+            todoFab.style.right = '';
+            todoFab.style.bottom = '';
+            todoFab.style.left = '';
+            todoFab.style.maxWidth = '';
+            todoFab.style.zIndex = '';
+            return;
+        }
+
+        if (appPanelOpen) {
+            syncFab.style.display = 'flex';
+            syncFab.style.position = 'fixed';
+            syncFab.style.left = '12px';
+            syncFab.style.top = 'calc(env(safe-area-inset-top) + 56px)';
+            syncFab.style.right = 'auto';
+            syncFab.style.bottom = 'auto';
+            syncFab.style.maxWidth = 'calc(100vw - 24px)';
+            syncFab.style.zIndex = '1512';
+        } else {
+            syncFab.style.display = 'none';
+        }
+
+        todoFab.style.position = 'fixed';
+        todoFab.style.right = 'max(10px, env(safe-area-inset-right))';
+        todoFab.style.bottom = 'calc(env(safe-area-inset-bottom) + 10px)';
+        todoFab.style.left = 'auto';
+        todoFab.style.maxWidth = 'calc(100vw - 20px - env(safe-area-inset-right))';
+        todoFab.style.zIndex = '1520';
     }
 
     function openAppPanel() {
         if (!isAppMode) return;
         appPanelOpen = true;
         document.body.classList.add('app-panel-open');
+        applyAppFabLayout();
     }
 
     function closeAppPanel() {
         appPanelOpen = false;
         document.body.classList.remove('app-panel-open');
+        applyAppFabLayout();
     }
 
     function toggleAppPanel(event) {
@@ -416,11 +678,13 @@
         isAppMode = detectStandaloneApp();
         if (!isAppMode) {
             document.body.classList.remove('app-mode', 'app-panel-open', 'app-writing');
+            applyAppFabLayout();
             return;
         }
 
         document.body.classList.add('app-mode');
         closeAppPanel();
+        applyAppFabLayout();
 
         if (window.matchMedia) {
             const mq = window.matchMedia('(display-mode: standalone)');
@@ -431,11 +695,13 @@
                         isAppMode = false;
                         closeAppPanel();
                         document.body.classList.remove('app-mode', 'app-writing');
+                        applyAppFabLayout();
                         return;
                     }
                     isAppMode = true;
                     document.body.classList.add('app-mode');
                     closeAppPanel();
+                    applyAppFabLayout();
                 });
             }
         }
@@ -445,18 +711,32 @@
         const folderSidebar = document.getElementById('folder-sidebar');
         const memoListBar = document.getElementById('memo-list-bar');
         const syncFab = document.getElementById('sync-fab');
+        const todoFab = document.getElementById('todo-fab');
         const panelToggle = document.getElementById('app-panel-toggle');
 
-        [folderSidebar, memoListBar, syncFab, panelToggle].forEach((el) => {
+        [folderSidebar, memoListBar, syncFab, todoFab, panelToggle].forEach((el) => {
             if (!el) return;
             el.addEventListener('click', (event) => event.stopPropagation());
         });
+
+        window.addEventListener('resize', applyAppFabLayout);
+        window.addEventListener('orientationchange', applyAppFabLayout);
     }
 
     function toggleSyncPanel(event) {
         if (event) event.stopPropagation();
         const panel = document.getElementById('sync-panel');
         panel.classList.toggle('open');
+    }
+
+    function toggleTodoPanel(event) {
+        if (event) event.stopPropagation();
+        const panel = document.getElementById('todo-panel');
+        panel.classList.toggle('open');
+    }
+
+    function closeTodoPanel() {
+        document.getElementById('todo-panel').classList.remove('open');
     }
 
     function scheduleAutoSave() {
@@ -543,8 +823,18 @@
 
     function registerServiceWorker() {
         if (!('serviceWorker' in navigator)) return;
-        navigator.serviceWorker.register('./sw.js').catch((err) => {
-            console.warn('ServiceWorker registration failed:', err);
+        navigator.serviceWorker
+            .register('./sw.js?v=4', { updateViaCache: 'none' })
+            .then((registration) => registration.update())
+            .catch((err) => {
+                console.warn('ServiceWorker registration failed:', err);
+            });
+
+        let reloaded = false;
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+            if (reloaded) return;
+            reloaded = true;
+            window.location.reload();
         });
     }
 
@@ -981,6 +1271,136 @@
             .join('');
     }
 
+    function getVisibleTodosLocal() {
+        const source = Array.isArray(db.todos) ? db.todos : [];
+        const visible = source.filter((todo) => !todo.deletedAt);
+        visible.sort((a, b) => {
+            if (a.done !== b.done) return a.done ? 1 : -1;
+            return new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0);
+        });
+        return visible;
+    }
+
+    function getVisibleTodos() {
+        if (Sync && typeof Sync.getVisibleTodos === 'function') return Sync.getVisibleTodos(db);
+        return getVisibleTodosLocal();
+    }
+
+    function renderTodos() {
+        const list = document.getElementById('todo-list');
+        const stats = document.getElementById('todo-stats');
+        if (!list || !stats) return;
+
+        const visible = getVisibleTodos();
+        const doneCount = visible.filter((todo) => todo.done).length;
+        stats.innerText = visible.length ? `${doneCount}/${visible.length} done` : 'No tasks';
+
+        if (!visible.length) {
+            list.innerHTML = '<div class="todo-empty">No tasks yet</div>';
+            return;
+        }
+
+        list.innerHTML = visible
+            .map((todo) => {
+                const idArg = escapeJsSingle(todo.id);
+                const text = escapeHtml(todo.text || '');
+                return `
+            <div class="todo-item ${todo.done ? 'done' : ''}">
+                <input type="checkbox" class="todo-item-check" ${todo.done ? 'checked' : ''} onchange="toggleTodoDone('${idArg}', this.checked)">
+                <div class="todo-item-text">${text}</div>
+                <button class="todo-item-del" onclick="deleteTodo('${idArg}')" aria-label="Delete to-do">DEL</button>
+            </div>
+        `;
+            })
+            .join('');
+    }
+
+    function handleTodoInputKey(event) {
+        if (event.key !== 'Enter') return;
+        event.preventDefault();
+        addTodo();
+    }
+
+    function addTodo() {
+        const input = document.getElementById('todo-input');
+        if (!input) return;
+        const text = String(input.value || '').trim();
+        if (!text) return;
+
+        const now = new Date().toISOString();
+        const id = 'todo-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 7);
+
+        if (!Array.isArray(db.todos)) db.todos = [];
+        db.todos.unshift({
+            id,
+            text,
+            done: false,
+            updatedAt: now,
+            deletedAt: null,
+        });
+
+        input.value = '';
+        saveDB();
+        scheduleCloudSync('add-todo');
+        renderTodos();
+    }
+
+    function toggleTodoDone(id, nextDone) {
+        const todo = Array.isArray(db.todos) ? db.todos.find((item) => item.id === id && !item.deletedAt) : null;
+        if (!todo) return;
+
+        if (Sync && typeof Sync.touchTodo === 'function') {
+            Sync.touchTodo(todo, nextDone === true);
+        } else {
+            todo.done = nextDone === true;
+            todo.updatedAt = new Date().toISOString();
+            todo.deletedAt = null;
+        }
+
+        saveDB();
+        scheduleCloudSync('toggle-todo');
+        renderTodos();
+    }
+
+    function deleteTodo(id) {
+        if (!id) return;
+        if (Sync && typeof Sync.markTodoDeleted === 'function') {
+            Sync.markTodoDeleted(db, id);
+        } else if (Array.isArray(db.todos)) {
+            const todo = db.todos.find((item) => item.id === id);
+            if (todo) {
+                const now = new Date().toISOString();
+                todo.deletedAt = now;
+                todo.updatedAt = now;
+            }
+        }
+
+        saveDB();
+        scheduleCloudSync('delete-todo');
+        renderTodos();
+    }
+
+    function clearDoneTodos() {
+        const doneTodos = getVisibleTodos().filter((todo) => todo.done);
+        if (!doneTodos.length) return;
+
+        doneTodos.forEach((todo) => {
+            if (Sync && typeof Sync.markTodoDeleted === 'function') {
+                Sync.markTodoDeleted(db, todo.id);
+                return;
+            }
+            const item = Array.isArray(db.todos) ? db.todos.find((x) => x.id === todo.id) : null;
+            if (!item) return;
+            const now = new Date().toISOString();
+            item.deletedAt = now;
+            item.updatedAt = now;
+        });
+
+        saveDB();
+        scheduleCloudSync('clear-todos');
+        renderTodos();
+    }
+
     function renameFolder() {
         const oldName = targetFolder;
         const newName = prompt(`Rename '${oldName}' to:`, oldName);
@@ -1297,6 +1717,7 @@
             saveDB();
             renderFolders();
             selectFolder(currentFolder);
+            renderTodos();
             alert('Pull complete (merged).');
         } catch (err) {
             alert('Pull failed: ' + formatError(err));
@@ -1318,6 +1739,7 @@
                 db = pushed.db;
                 remoteFileSha = pushed.sha;
                 saveDB();
+                renderTodos();
                 alert('Push complete.');
             } catch (err) {
                 if (err && err.status === 409) {
@@ -1326,6 +1748,7 @@
                     db = pushedRetry.db;
                     remoteFileSha = pushedRetry.sha;
                     saveDB();
+                    renderTodos();
                     alert('Push complete (retry).');
                     return;
                 }
@@ -1358,6 +1781,7 @@
                 saveDB();
                 renderFolders();
                 selectFolder(currentFolder);
+                renderTodos();
                 if (!silent) alert('Sync complete: push-initial');
                 return { mode: 'push-initial', sha: pushedInitial.sha, db: pushedInitial.db };
             }
@@ -1380,6 +1804,7 @@
             saveDB();
             renderFolders();
             selectFolder(currentFolder);
+            renderTodos();
             if (!silent) alert('Sync complete.');
             return { mode: 'merged', sha: remoteFileSha, db };
         } catch (err) {
@@ -1423,6 +1848,7 @@
         document.getElementById('folder-ctx').style.display = 'none';
         document.getElementById('memo-ctx').style.display = 'none';
         document.getElementById('sync-panel').classList.remove('open');
+        closeTodoPanel();
         closeAppPanel();
     });
 
@@ -1432,6 +1858,12 @@
     window.pushToGitHub = pushToGitHub;
     window.syncWithGitHub = syncWithGitHub;
     window.toggleSyncPanel = toggleSyncPanel;
+    window.toggleTodoPanel = toggleTodoPanel;
+    window.handleTodoInputKey = handleTodoInputKey;
+    window.addTodo = addTodo;
+    window.toggleTodoDone = toggleTodoDone;
+    window.deleteTodo = deleteTodo;
+    window.clearDoneTodos = clearDoneTodos;
     window.toggleAppPanel = toggleAppPanel;
     window.closeAppPanel = closeAppPanel;
 </script>

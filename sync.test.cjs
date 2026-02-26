@@ -5,6 +5,9 @@ const {
     normalizeDb,
     mergeDb,
     markMemoDeleted,
+    touchTodo,
+    markTodoDeleted,
+    getVisibleTodos,
     parseRemotePayload,
     serializeRemotePayload,
     validateGitHubConfig,
@@ -29,6 +32,8 @@ test('normalizeDb: legacy shape gets normalized', () => {
     assert.equal(db.memos[0].id, '1');
     assert.equal(db.memos[0].updatedAt, '2026-01-01T00:00:00.000Z');
     assert.equal(db.memos[0].deletedAt, null);
+    assert.deepEqual(db.todos, []);
+    assert.deepEqual(db.todoTombstones, {});
 });
 
 test('mergeDb: newer memo wins by updatedAt', () => {
@@ -120,6 +125,36 @@ test('markMemoDeleted: updates memo and tombstone map', () => {
 
     assert.equal(db.memoTombstones.m1, '2026-01-05T00:00:00.000Z');
     assert.equal(db.memos[0].deletedAt, '2026-01-05T00:00:00.000Z');
+});
+
+test('mergeDb: newer todo state wins by updatedAt', () => {
+    const local = normalizeDb({
+        todos: [{ id: 't1', text: 'Task', done: false, updatedAt: '2026-01-01T00:00:00.000Z', deletedAt: null }],
+    });
+    const remote = normalizeDb({
+        todos: [{ id: 't1', text: 'Task', done: true, updatedAt: '2026-01-02T00:00:00.000Z', deletedAt: null }],
+    });
+
+    const merged = mergeDb(local, remote);
+    assert.equal(merged.todos.length, 1);
+    assert.equal(merged.todos[0].done, true);
+});
+
+test('markTodoDeleted + getVisibleTodos: hides deleted and keeps active', () => {
+    const db = normalizeDb({
+        todos: [
+            { id: 't1', text: 'A', done: false, updatedAt: '2026-01-01T00:00:00.000Z', deletedAt: null },
+            { id: 't2', text: 'B', done: true, updatedAt: '2026-01-02T00:00:00.000Z', deletedAt: null },
+        ],
+    });
+
+    touchTodo(db.todos[0], true, '2026-01-03T00:00:00.000Z');
+    markTodoDeleted(db, 't2', '2026-01-04T00:00:00.000Z');
+
+    const visible = getVisibleTodos(db);
+    assert.equal(visible.length, 1);
+    assert.equal(visible[0].id, 't1');
+    assert.equal(db.todoTombstones.t2, '2026-01-04T00:00:00.000Z');
 });
 
 test('serializeRemotePayload/parseRemotePayload: roundtrip works', () => {

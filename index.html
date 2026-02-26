@@ -3,6 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#000000">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="BLACK SPACE OS">
+    <link rel="manifest" href="./manifest.webmanifest">
+    <link rel="icon" href="./icon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="./icon.svg">
     <title>BLACK SPACE OS - Monochrome Edition</title>
     <style>
         /* [디자인 시스템 - 무채색 & 블랙] */
@@ -130,13 +137,108 @@
             .sync-main-btn { font-size: 9px; padding: 7px 10px; }
             .sync-action-btn { font-size: 10px; padding: 9px 10px; }
         }
+
+        /* App-only layout (PWA standalone, editor-first + left menu) */
+        body.app-mode { overflow: hidden; background: #000; }
+        body.app-mode .app-container { height: 100dvh; width: 100vw; display: block; background: #000; }
+        body.app-mode .editor-view {
+            position: fixed;
+            top: env(safe-area-inset-top);
+            left: 0;
+            right: 0;
+            bottom: env(safe-area-inset-bottom);
+            padding: 62px 18px 18px;
+            background: #000;
+            overflow-y: auto;
+            z-index: 1100;
+        }
+        body.app-mode #date-display { margin-bottom: 8px; color: #666; }
+        body.app-mode #title-input { font-size: 31px; margin-bottom: 8px; letter-spacing: -0.2px; }
+        body.app-mode .divider { margin-bottom: 18px; }
+        body.app-mode #content-input { font-size: 18px; line-height: 1.82; color: #c7c7c7; }
+        body.app-mode .clip-btn { opacity: 0.28; }
+
+        .app-panel-toggle,
+        .app-panel-backdrop { display: none; }
+        body.app-mode .app-panel-toggle {
+            display: block;
+            position: fixed;
+            top: calc(env(safe-area-inset-top) + 12px);
+            left: 12px;
+            width: 36px;
+            height: 36px;
+            border: 1px solid #2a2a2a;
+            border-radius: 8px;
+            background: rgba(8, 8, 8, 0.9);
+            color: #b5b5b5;
+            font-size: 17px;
+            line-height: 1;
+            z-index: 1510;
+            cursor: pointer;
+            backdrop-filter: blur(6px);
+        }
+        body.app-mode .app-panel-toggle:hover { color: #fff; border-color: #555; }
+        body.app-mode .app-panel-backdrop {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.62);
+            z-index: 1400;
+        }
+        body.app-mode.app-panel-open .app-panel-backdrop { display: block; }
+        body.app-mode .folder-sidebar,
+        body.app-mode .memo-list-bar {
+            position: fixed;
+            top: calc(env(safe-area-inset-top) + 58px);
+            bottom: calc(env(safe-area-inset-bottom) + 10px);
+            border: 1px solid #1f1f1f;
+            border-radius: 10px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.65);
+            display: flex;
+            z-index: 1450;
+            transform: translateX(-112%);
+            transition: transform 0.22s ease;
+        }
+        body.app-mode .folder-sidebar {
+            left: 10px;
+            width: 33%;
+            min-width: 122px;
+            padding: 12px 8px;
+            background: #060606;
+        }
+        body.app-mode .memo-list-bar {
+            left: calc(10px + 33% + 8px);
+            right: 10px;
+            width: auto;
+            background: #0c0c0c;
+        }
+        body.app-mode.app-panel-open .folder-sidebar,
+        body.app-mode.app-panel-open .memo-list-bar { transform: translateX(0); }
+        body.app-mode .memo-list-header { padding: 12px 12px; }
+        body.app-mode .memo-item { padding: 14px 12px; }
+        body.app-mode .folder-item { padding: 11px 11px; }
+        body.app-mode .folder-sidebar-head { margin-bottom: 12px; padding: 0 2px; }
+
+        body.app-mode .sync-fab {
+            left: auto;
+            right: 10px;
+            bottom: calc(env(safe-area-inset-bottom) + 10px);
+            z-index: 1520;
+            opacity: 0.62;
+            transition: opacity 0.2s ease, transform 0.2s ease;
+        }
+        body.app-mode.app-writing .sync-fab {
+            opacity: 0;
+            transform: translateY(10px);
+            pointer-events: none;
+        }
     </style>
 </head>
 <body>
 
 <div class="app-container">
     <!-- 1단 -->
-    <div class="folder-sidebar" oncontextmenu="return false;">
+    <div id="folder-sidebar" class="folder-sidebar" oncontextmenu="return false;">
         <div class="folder-sidebar-head">
             <div class="sidebar-title">FOLDERS</div>
             <button class="btn-add-folder" onclick="addFolder()" title="Add folder" aria-label="Add folder">+</button>
@@ -145,7 +247,7 @@
     </div>
 
     <!-- 2단 -->
-    <div class="memo-list-bar" oncontextmenu="return false;">
+    <div id="memo-list-bar" class="memo-list-bar" oncontextmenu="return false;">
         <div class="memo-list-header">
             <span id="current-folder-label">General</span>
             <button class="btn-add-memo" onclick="addMemo()">+</button>
@@ -194,12 +296,21 @@
     </div>
 </div>
 
+<button id="app-panel-toggle" class="app-panel-toggle" onclick="toggleAppPanel(event)" aria-label="Open folders and memos">☰</button>
+<div id="app-panel-backdrop" class="app-panel-backdrop" onclick="closeAppPanel()"></div>
+
 <script src="./sync.js"></script>
 <script>
     const Sync = window.BlackSpaceSync || null;
     const STORAGE_KEY = 'BLACK_SPACE_OS_V2';
+    const SECURITY_CONFIG_KEY = 'BLACK_SPACE_SECURITY_V1';
+    const SECURITY_PASSPHRASE_KEY = 'BLACK_SPACE_SESSION_PASSPHRASE';
+    const SECURITY_TOKEN_VAULT_KEY = 'BLACK_SPACE_TOKEN_VAULT';
+    const SECURITY_ITERATIONS = 250000;
 
     let db = loadLocalDb();
+    let securityConfig = loadSecurityConfig();
+    let sessionPassphrase = loadSessionPassphrase();
     let currentFolder = db.folders[0] || 'General';
     let currentMemoId = null;
     let targetFolder = null;
@@ -214,13 +325,25 @@
     let longPressState = null;
     let suppressNextTapFolder = null;
     let suppressNextTapMemo = null;
+    let autoSyncIntervalId = null;
+    let autoSyncInFlight = false;
+    const AUTO_SYNC_INTERVAL_MS = 45000;
+    let cloudSyncTimer = null;
+    const CLOUD_SYNC_DEBOUNCE_MS = 2500;
+    let isAppMode = false;
+    let appPanelOpen = false;
 
-    window.onload = () => {
+    window.onload = async () => {
+        initializeAppMode();
+        setupAppPanelBindings();
         if (!db.folders.includes(currentFolder)) currentFolder = db.folders[0] || 'General';
         renderFolders();
         selectFolder(currentFolder);
         setupAutoSaveBindings();
         setupLongPressBindings();
+        await unlockSecurityForSession();
+        setupAutoSyncBindings();
+        registerServiceWorker();
     };
 
     function loadLocalDb() {
@@ -257,6 +380,77 @@
         document.getElementById('current-folder-label').innerText = nextFolder;
     }
 
+    function setAppWritingMode(isWriting) {
+        if (!isAppMode) return;
+        if (isWriting) document.body.classList.add('app-writing');
+        else document.body.classList.remove('app-writing');
+    }
+
+    function detectStandaloneApp() {
+        const mediaStandalone = window.matchMedia && window.matchMedia('(display-mode: standalone)').matches;
+        const iosStandalone = window.navigator && window.navigator.standalone === true;
+        return mediaStandalone || iosStandalone;
+    }
+
+    function openAppPanel() {
+        if (!isAppMode) return;
+        appPanelOpen = true;
+        document.body.classList.add('app-panel-open');
+    }
+
+    function closeAppPanel() {
+        appPanelOpen = false;
+        document.body.classList.remove('app-panel-open');
+    }
+
+    function toggleAppPanel(event) {
+        if (!isAppMode) return;
+        if (event) event.stopPropagation();
+        if (appPanelOpen) closeAppPanel();
+        else openAppPanel();
+    }
+
+    function initializeAppMode() {
+        isAppMode = detectStandaloneApp();
+        if (!isAppMode) {
+            document.body.classList.remove('app-mode', 'app-panel-open', 'app-writing');
+            return;
+        }
+
+        document.body.classList.add('app-mode');
+        closeAppPanel();
+
+        if (window.matchMedia) {
+            const mq = window.matchMedia('(display-mode: standalone)');
+            if (mq && typeof mq.addEventListener === 'function') {
+                mq.addEventListener('change', () => {
+                    const next = detectStandaloneApp();
+                    if (!next) {
+                        isAppMode = false;
+                        closeAppPanel();
+                        document.body.classList.remove('app-mode', 'app-writing');
+                        return;
+                    }
+                    isAppMode = true;
+                    document.body.classList.add('app-mode');
+                    closeAppPanel();
+                });
+            }
+        }
+    }
+
+    function setupAppPanelBindings() {
+        const folderSidebar = document.getElementById('folder-sidebar');
+        const memoListBar = document.getElementById('memo-list-bar');
+        const syncFab = document.getElementById('sync-fab');
+        const panelToggle = document.getElementById('app-panel-toggle');
+
+        [folderSidebar, memoListBar, syncFab, panelToggle].forEach((el) => {
+            if (!el) return;
+            el.addEventListener('click', (event) => event.stopPropagation());
+        });
+    }
+
     function toggleSyncPanel(event) {
         if (event) event.stopPropagation();
         const panel = document.getElementById('sync-panel');
@@ -288,12 +482,348 @@
 
         titleInput.addEventListener('blur', flushAutoSave);
         contentInput.addEventListener('blur', flushAutoSave);
+        titleInput.addEventListener('focus', () => setAppWritingMode(true));
+        contentInput.addEventListener('focus', () => setAppWritingMode(true));
+        titleInput.addEventListener('blur', () => setAppWritingMode(false));
+        contentInput.addEventListener('blur', () => setAppWritingMode(false));
 
         document.addEventListener('visibilitychange', () => {
             if (document.hidden) flushAutoSave();
         });
 
         window.addEventListener('beforeunload', flushAutoSave);
+    }
+
+    function hasGitHubConfig() {
+        if (!Sync) return false;
+        const cfg = Sync.loadGitHubConfig();
+        const missing = Sync.validateGitHubConfig(cfg);
+        return missing.length === 0;
+    }
+
+    function triggerAutoSync(reason) {
+        if (!hasGitHubConfig()) return;
+        if (typeof navigator !== 'undefined' && navigator.onLine === false) return;
+        if (isSecurityEnabled() && !sessionPassphrase) return;
+        syncWithGitHub({ silent: true, reason: reason || 'auto' });
+    }
+
+    function scheduleCloudSync(reason) {
+        if (!hasGitHubConfig()) return;
+        if (cloudSyncTimer) clearTimeout(cloudSyncTimer);
+        cloudSyncTimer = setTimeout(() => {
+            cloudSyncTimer = null;
+            triggerAutoSync(reason || 'local-change');
+        }, CLOUD_SYNC_DEBOUNCE_MS);
+    }
+
+    function stopAutoSync() {
+        if (!autoSyncIntervalId) return;
+        clearInterval(autoSyncIntervalId);
+        autoSyncIntervalId = null;
+    }
+
+    function startAutoSync() {
+        stopAutoSync();
+        autoSyncIntervalId = setInterval(() => {
+            triggerAutoSync('interval');
+        }, AUTO_SYNC_INTERVAL_MS);
+    }
+
+    function setupAutoSyncBindings() {
+        startAutoSync();
+        setTimeout(() => triggerAutoSync('startup'), 1200);
+        window.addEventListener('online', () => triggerAutoSync('online'));
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) triggerAutoSync('visible');
+        });
+    }
+
+    function registerServiceWorker() {
+        if (!('serviceWorker' in navigator)) return;
+        navigator.serviceWorker.register('./sw.js').catch((err) => {
+            console.warn('ServiceWorker registration failed:', err);
+        });
+    }
+
+    function safeStorage(type) {
+        try {
+            return type === 'session' ? window.sessionStorage : window.localStorage;
+        } catch (_err) {
+            return null;
+        }
+    }
+
+    function loadSecurityConfig() {
+        const local = safeStorage('local');
+        const fallback = { enabled: false, salt: '', iterations: SECURITY_ITERATIONS };
+        if (!local) return fallback;
+
+        const raw = local.getItem(SECURITY_CONFIG_KEY);
+        if (!raw) return fallback;
+
+        try {
+            const parsed = JSON.parse(raw) || {};
+            return {
+                enabled: parsed.enabled === true,
+                salt: typeof parsed.salt === 'string' ? parsed.salt : '',
+                iterations: Number(parsed.iterations) > 0 ? Number(parsed.iterations) : SECURITY_ITERATIONS,
+            };
+        } catch (_err) {
+            return fallback;
+        }
+    }
+
+    function saveSecurityConfig(next) {
+        securityConfig = {
+            enabled: next && next.enabled === true,
+            salt: next && typeof next.salt === 'string' ? next.salt : '',
+            iterations: next && Number(next.iterations) > 0 ? Number(next.iterations) : SECURITY_ITERATIONS,
+        };
+        const local = safeStorage('local');
+        if (local) local.setItem(SECURITY_CONFIG_KEY, JSON.stringify(securityConfig));
+        return securityConfig;
+    }
+
+    function loadSessionPassphrase() {
+        const session = safeStorage('session');
+        if (!session) return '';
+        return session.getItem(SECURITY_PASSPHRASE_KEY) || '';
+    }
+
+    function setSessionPassphrase(passphrase) {
+        const value = String(passphrase || '');
+        sessionPassphrase = value;
+        const session = safeStorage('session');
+        if (!session) return;
+        if (value) session.setItem(SECURITY_PASSPHRASE_KEY, value);
+        else session.removeItem(SECURITY_PASSPHRASE_KEY);
+    }
+
+    function isSecurityEnabled() {
+        return securityConfig && securityConfig.enabled === true;
+    }
+
+    function bytesToBase64(bytes) {
+        let binary = '';
+        for (let i = 0; i < bytes.length; i += 1) {
+            binary += String.fromCharCode(bytes[i]);
+        }
+        return btoa(binary);
+    }
+
+    function base64ToBytes(base64) {
+        const binary = atob(String(base64 || ''));
+        const bytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i += 1) {
+            bytes[i] = binary.charCodeAt(i);
+        }
+        return bytes;
+    }
+
+    function randomBase64(size) {
+        const bytes = new Uint8Array(size);
+        crypto.getRandomValues(bytes);
+        return bytesToBase64(bytes);
+    }
+
+    async function deriveEncryptionKey(passphrase, saltB64, iterations, usage) {
+        const enc = new TextEncoder();
+        const baseKey = await crypto.subtle.importKey('raw', enc.encode(passphrase), 'PBKDF2', false, ['deriveKey']);
+        return crypto.subtle.deriveKey(
+            {
+                name: 'PBKDF2',
+                salt: base64ToBytes(saltB64),
+                iterations: iterations || SECURITY_ITERATIONS,
+                hash: 'SHA-256',
+            },
+            baseKey,
+            { name: 'AES-GCM', length: 256 },
+            false,
+            usage
+        );
+    }
+
+    async function createEncryptedBlob(plainText, passphrase, options) {
+        const opts = options || {};
+        const salt = opts.salt || randomBase64(16);
+        const iterations = Number(opts.iterations) > 0 ? Number(opts.iterations) : SECURITY_ITERATIONS;
+        const enc = new TextEncoder();
+        const iv = new Uint8Array(12);
+        crypto.getRandomValues(iv);
+        const key = await deriveEncryptionKey(passphrase, salt, iterations, ['encrypt']);
+        const cipherBuf = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, enc.encode(plainText));
+
+        return {
+            version: 1,
+            algorithm: 'AES-GCM',
+            kdf: 'PBKDF2',
+            hash: 'SHA-256',
+            iterations,
+            salt,
+            iv: bytesToBase64(iv),
+            ciphertext: bytesToBase64(new Uint8Array(cipherBuf)),
+        };
+    }
+
+    async function decryptEncryptedBlob(blob, passphrase) {
+        const dec = new TextDecoder();
+        const key = await deriveEncryptionKey(passphrase, blob.salt, blob.iterations, ['decrypt']);
+        const plainBuf = await crypto.subtle.decrypt(
+            { name: 'AES-GCM', iv: base64ToBytes(blob.iv) },
+            key,
+            base64ToBytes(blob.ciphertext)
+        );
+        return dec.decode(plainBuf);
+    }
+
+    function readTokenVaultBlob() {
+        const local = safeStorage('local');
+        if (!local) return null;
+        const raw = local.getItem(SECURITY_TOKEN_VAULT_KEY);
+        if (!raw) return null;
+        try {
+            return JSON.parse(raw);
+        } catch (_err) {
+            return null;
+        }
+    }
+
+    function clearTokenVault() {
+        const local = safeStorage('local');
+        if (local) local.removeItem(SECURITY_TOKEN_VAULT_KEY);
+    }
+
+    async function saveTokenVault(token, passphrase) {
+        const local = safeStorage('local');
+        if (!local) return;
+        const value = String(token || '').trim();
+        if (!value) {
+            clearTokenVault();
+            return;
+        }
+        const blob = await createEncryptedBlob(value, passphrase, { iterations: SECURITY_ITERATIONS });
+        local.setItem(SECURITY_TOKEN_VAULT_KEY, JSON.stringify(blob));
+    }
+
+    async function restoreSessionTokenFromVault(options) {
+        const cfg = Sync.loadGitHubConfig();
+        if (cfg.token) return true;
+
+        const blob = readTokenVaultBlob();
+        if (!blob) return false;
+
+        const passphrase = await ensureSessionPassphrase(options);
+        if (!passphrase) return false;
+
+        try {
+            const token = await decryptEncryptedBlob(blob, passphrase);
+            Sync.saveGitHubConfig({ ...cfg, token }, { persistToken: false });
+            return true;
+        } catch (_err) {
+            if (!(options && options.silent)) {
+                alert('저장된 토큰 복원에 실패했습니다. 보안 키를 다시 확인해주세요.');
+            }
+            return false;
+        }
+    }
+
+    async function unlockSecurityForSession() {
+        if (!isSecurityEnabled()) return;
+        const hasVault = !!readTokenVaultBlob();
+        if (!hasVault) return;
+        if (!sessionPassphrase) {
+            await ensureSessionPassphrase({ silent: false });
+        }
+        if (!sessionPassphrase) return;
+        await restoreSessionTokenFromVault({ silent: false });
+    }
+
+    async function encryptRemoteDbPayload(normalizedDb, passphrase) {
+        const plainText = JSON.stringify({ schemaVersion: 2, db: normalizedDb });
+        const payload = await createEncryptedBlob(plainText, passphrase, {
+            salt: securityConfig.salt,
+            iterations: securityConfig.iterations,
+        });
+
+        return {
+            schemaVersion: 4,
+            encrypted: true,
+            ...payload,
+            savedAt: new Date().toISOString(),
+        };
+    }
+
+    async function decryptRemoteDbPayload(encryptedPayload, passphrase) {
+        const plainText = await decryptEncryptedBlob(encryptedPayload, passphrase);
+        const parsed = JSON.parse(plainText);
+        if (!parsed) throw new Error('Invalid decrypted payload');
+        if (parsed.db) return Sync.normalizeDb(parsed.db);
+        return Sync.normalizeDb(parsed);
+    }
+
+    async function ensureSessionPassphrase(options) {
+        if (!isSecurityEnabled()) return '';
+        if (sessionPassphrase) return sessionPassphrase;
+
+        const opts = options || {};
+        if (opts.silent) return '';
+
+        const input = prompt('보안 키(암호)를 입력하세요. 이 키 없이는 메모를 복호화할 수 없습니다:');
+        if (input === null) return '';
+        const next = String(input).trim();
+        if (!next) return '';
+        setSessionPassphrase(next);
+        return next;
+    }
+
+    async function parseRemoteDbText(contentText, options) {
+        if (!contentText) return null;
+        let parsed = null;
+        try {
+            parsed = JSON.parse(contentText);
+        } catch (_err) {
+            parsed = null;
+        }
+
+        if (parsed && parsed.encrypted === true) {
+            const passphrase = await ensureSessionPassphrase(options);
+            if (!passphrase) throw new Error('보안 키가 없어 암호화된 메모를 열 수 없습니다.');
+            try {
+                return await decryptRemoteDbPayload(parsed, passphrase);
+            } catch (_err) {
+                throw new Error('암호화된 메모 해독에 실패했습니다. 보안 키를 확인하세요.');
+            }
+        }
+
+        const plain = Sync.parseRemotePayload(contentText);
+        if (!plain) throw new Error('Remote notes file format is invalid.');
+        return Sync.normalizeDb(plain);
+    }
+
+    async function encodeRemoteDbText(normalizedDb, options) {
+        if (!isSecurityEnabled()) {
+            return Sync.serializeRemotePayload(normalizedDb);
+        }
+        const passphrase = await ensureSessionPassphrase(options);
+        if (!passphrase) throw new Error('보안 키가 없어 암호화 저장을 진행할 수 없습니다.');
+        const encrypted = await encryptRemoteDbPayload(normalizedDb, passphrase);
+        return JSON.stringify(encrypted, null, 2);
+    }
+
+    async function readRemoteDb(config, options) {
+        const file = await Sync.getRemoteFile(config);
+        if (!file.exists) return { exists: false, sha: null, db: null };
+        const remoteDb = await parseRemoteDbText(file.content, options);
+        return { exists: true, sha: file.sha, db: Sync.normalizeDb(remoteDb) };
+    }
+
+    async function writeRemoteDb(config, nextDb, sha, message, options) {
+        const normalized = Sync.normalizeDb(nextDb);
+        normalized.lastSyncedAt = new Date().toISOString();
+        const text = await encodeRemoteDbText(normalized, options);
+        const result = await Sync.putRemoteFile(config, text, sha, message);
+        return { sha: result.sha, db: normalized };
     }
 
     function clearLongPressTimer() {
@@ -397,6 +927,7 @@
 
     function clearEditor() {
         currentMemoId = null;
+        setAppWritingMode(false);
         document.getElementById('title-input').value = '';
         document.getElementById('content-input').value = '';
         document.getElementById('date-display').innerText = 'Select or create a memo';
@@ -469,6 +1000,7 @@
             if (currentFolder === oldName) setFolderState(nextName);
 
             saveDB();
+            scheduleCloudSync('rename-folder');
             renderFolders();
             renderMemoList();
         }
@@ -481,6 +1013,7 @@
         if (db.folders.includes(next)) return;
         db.folders.push(next);
         saveDB();
+        scheduleCloudSync('add-folder');
         renderFolders();
     }
 
@@ -500,6 +1033,7 @@
         db.folders = db.folders.filter((f) => f !== targetFolder);
         currentFolder = db.folders[0] || 'General';
         saveDB();
+        scheduleCloudSync('delete-folder');
         renderFolders();
         selectFolder(currentFolder);
     }
@@ -542,6 +1076,7 @@
             imgCont.style.display = 'none';
         }
         renderMemoList();
+        if (isAppMode) closeAppPanel();
     }
 
     function addMemo() {
@@ -550,6 +1085,7 @@
         const now = new Date().toISOString();
         db.memos.unshift({ id, folder: currentFolder, title: '', content: '', date: now, updatedAt: now, deletedAt: null, image: null });
         saveDB();
+        scheduleCloudSync('add-memo');
         selectMemo(id);
     }
 
@@ -565,6 +1101,7 @@
 
         document.getElementById('date-display').innerText = `MODIFIED: ${(memo.updatedAt || memo.date).replace('T', ' ').split('.')[0]}`;
         saveDB();
+        scheduleCloudSync('edit-memo');
         renderMemoList();
         return true;
     }
@@ -583,6 +1120,7 @@
             document.getElementById('preview-img').src = memo.image;
             document.getElementById('image-preview-container').style.display = 'block';
             saveDB();
+            scheduleCloudSync('image-upload');
             renderMemoList();
         };
         reader.readAsDataURL(file);
@@ -606,6 +1144,7 @@
         newMemo.deletedAt = null;
         db.memos.unshift(newMemo);
         saveDB();
+        scheduleCloudSync('paste-memo');
         renderMemoList();
     }
 
@@ -621,6 +1160,7 @@
         if (movedOutOfCurrentFolder) clearEditor();
 
         saveDB();
+        scheduleCloudSync('move-memo');
         renderMemoList();
         document.getElementById('memo-ctx').style.display = 'none';
     }
@@ -658,6 +1198,7 @@
         }
         if (currentMemoId === targetMemoId) clearEditor();
         saveDB();
+        scheduleCloudSync('delete-memo');
         renderMemoList();
     }
 
@@ -671,9 +1212,16 @@
         openMemoCtxAt(e.pageX, e.pageY, id);
     }
 
-    function getGitHubConfigOrThrow() {
+    async function getGitHubConfigOrThrow(options) {
         if (!Sync) throw new Error('sync.js is not loaded.');
-        const cfg = Sync.loadGitHubConfig();
+        const opts = options || {};
+        let cfg = Sync.loadGitHubConfig();
+
+        if (!cfg.token) {
+            await restoreSessionTokenFromVault({ silent: opts.silent === true });
+            cfg = Sync.loadGitHubConfig();
+        }
+
         const missing = Sync.validateGitHubConfig(cfg);
         if (missing.length) {
             throw new Error(`GitHub setting is incomplete: ${missing.join(', ')} (Ctrl/Cmd+Shift+G)`);
@@ -687,7 +1235,7 @@
         return err.message || String(err);
     }
 
-    function configureGitHubSync() {
+    async function configureGitHubSync() {
         if (!Sync) return alert('sync.js is not loaded.');
         const existing = Sync.loadGitHubConfig();
 
@@ -710,16 +1258,36 @@
         const missing = Sync.validateGitHubConfig(config);
         if (missing.length) return alert('Missing fields: ' + missing.join(', '));
 
-        const persistToken = confirm('토큰을 장기 저장할까요?\n확인: localStorage 저장\n취소: 현재 브라우저 세션에만 저장');
-        Sync.saveGitHubConfig(config, { persistToken });
-        alert('GitHub sync configured.\nShortcut: Ctrl/Cmd+Shift+Y to sync');
+        const passphrase = prompt('End-to-end 보안 키(암호, 8자 이상):', '');
+        if (passphrase === null) return;
+        const key = String(passphrase).trim();
+        if (key.length < 8) return alert('보안 키는 8자 이상이어야 합니다.');
+
+        if (!isSecurityEnabled()) {
+            const confirmPass = prompt('보안 키를 한번 더 입력하세요:', '');
+            if (confirmPass === null) return;
+            if (String(confirmPass).trim() !== key) return alert('보안 키가 일치하지 않습니다.');
+            saveSecurityConfig({
+                enabled: true,
+                salt: randomBase64(16),
+                iterations: SECURITY_ITERATIONS,
+            });
+        }
+
+        setSessionPassphrase(key);
+        await saveTokenVault(token, key);
+        // Security hardening: PAT session-only + encrypted local vault.
+        Sync.saveGitHubConfig(config, { persistToken: false });
+        startAutoSync();
+        triggerAutoSync('configured');
+        alert('GitHub sync configured.\nE2E 암호화 + 자동 동기화가 활성화되었습니다.');
     }
 
     async function pullFromGitHub() {
         try {
             flushAutoSave();
-            const config = getGitHubConfigOrThrow();
-            const pulled = await Sync.pullDb(config);
+            const config = await getGitHubConfigOrThrow({ silent: false });
+            const pulled = await readRemoteDb(config, { silent: false });
             if (!pulled.exists) return alert('Remote file not found. Push first to create it.');
             db = Sync.mergeDb(db, pulled.db);
             remoteFileSha = pulled.sha;
@@ -736,31 +1304,91 @@
     async function pushToGitHub() {
         try {
             flushAutoSave();
-            const config = getGitHubConfigOrThrow();
-            const pushed = await Sync.pushDb(config, db, remoteFileSha, 'Manual push from BLACK SPACE OS');
-            db = pushed.db;
-            remoteFileSha = pushed.sha;
-            saveDB();
-            alert('Push complete.');
+            const config = await getGitHubConfigOrThrow({ silent: false });
+            let baseSha = remoteFileSha;
+            if (!baseSha) {
+                const remote = await readRemoteDb(config, { silent: false });
+                baseSha = remote.exists ? remote.sha : null;
+            }
+
+            try {
+                const pushed = await writeRemoteDb(config, db, baseSha, 'Manual push from BLACK SPACE OS', { silent: false });
+                db = pushed.db;
+                remoteFileSha = pushed.sha;
+                saveDB();
+                alert('Push complete.');
+            } catch (err) {
+                if (err && err.status === 409) {
+                    const latest = await readRemoteDb(config, { silent: false });
+                    const pushedRetry = await writeRemoteDb(config, db, latest.sha, 'Manual push from BLACK SPACE OS (retry)', { silent: false });
+                    db = pushedRetry.db;
+                    remoteFileSha = pushedRetry.sha;
+                    saveDB();
+                    alert('Push complete (retry).');
+                    return;
+                }
+                throw err;
+            }
         } catch (err) {
             alert('Push failed: ' + formatError(err));
         }
     }
 
-    async function syncWithGitHub() {
+    async function syncWithGitHub(options) {
+        const opts = options || {};
+        const silent = opts.silent === true;
+        if (autoSyncInFlight) {
+            if (!silent) alert('Sync is already in progress.');
+            return null;
+        }
+
+        autoSyncInFlight = true;
         try {
             flushAutoSave();
-            const config = getGitHubConfigOrThrow();
-            const result = await Sync.syncDb(config, db);
-            db = result.db;
-            remoteFileSha = result.sha;
+            const config = await getGitHubConfigOrThrow({ silent });
+            const remote = await readRemoteDb(config, { silent });
+
+            if (!remote.exists) {
+                const pushedInitial = await writeRemoteDb(config, db, null, 'Initialize notes from BLACK SPACE OS', { silent });
+                db = pushedInitial.db;
+                remoteFileSha = pushedInitial.sha;
+                ensureCurrentFolder();
+                saveDB();
+                renderFolders();
+                selectFolder(currentFolder);
+                if (!silent) alert('Sync complete: push-initial');
+                return { mode: 'push-initial', sha: pushedInitial.sha, db: pushedInitial.db };
+            }
+
+            const merged = Sync.mergeDb(db, remote.db);
+            try {
+                const pushed = await writeRemoteDb(config, merged, remote.sha, 'Sync notes from BLACK SPACE OS', { silent });
+                db = pushed.db;
+                remoteFileSha = pushed.sha;
+            } catch (err) {
+                if (!(err && err.status === 409)) throw err;
+                const latest = await readRemoteDb(config, { silent });
+                const retryMerged = Sync.mergeDb(merged, latest.db);
+                const retryPushed = await writeRemoteDb(config, retryMerged, latest.sha, 'Sync notes from BLACK SPACE OS (retry)', { silent });
+                db = retryPushed.db;
+                remoteFileSha = retryPushed.sha;
+            }
+
             ensureCurrentFolder();
             saveDB();
             renderFolders();
             selectFolder(currentFolder);
-            alert('Sync complete: ' + result.mode);
+            if (!silent) alert('Sync complete.');
+            return { mode: 'merged', sha: remoteFileSha, db };
         } catch (err) {
-            alert('Sync failed: ' + formatError(err));
+            if (!silent) {
+                alert('Sync failed: ' + formatError(err));
+            } else {
+                console.warn('Auto sync failed:', err);
+            }
+            return null;
+        } finally {
+            autoSyncInFlight = false;
         }
     }
 
@@ -793,6 +1421,7 @@
         document.getElementById('folder-ctx').style.display = 'none';
         document.getElementById('memo-ctx').style.display = 'none';
         document.getElementById('sync-panel').classList.remove('open');
+        closeAppPanel();
     });
 
     window.configureGitHubSync = configureGitHubSync;
@@ -801,6 +1430,8 @@
     window.pushToGitHub = pushToGitHub;
     window.syncWithGitHub = syncWithGitHub;
     window.toggleSyncPanel = toggleSyncPanel;
+    window.toggleAppPanel = toggleAppPanel;
+    window.closeAppPanel = closeAppPanel;
 </script>
 </body>
 </html>

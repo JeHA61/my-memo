@@ -289,7 +289,6 @@
 
     function saveGitHubConfig(config, options) {
         const cfg = sanitizeConfig(config);
-        const persistToken = options && options.persistToken === true;
 
         const plainConfig = {
             owner: cfg.owner,
@@ -303,12 +302,8 @@
 
         if (local) local.setItem(CONFIG_KEY, JSON.stringify(plainConfig));
         if (session) session.setItem(TOKEN_KEY, cfg.token);
-
-        if (persistToken && local) {
-            local.setItem(TOKEN_KEY, cfg.token);
-        } else if (local) {
-            local.removeItem(TOKEN_KEY);
-        }
+        // Security hardening: token is session-only.
+        if (local) local.removeItem(TOKEN_KEY);
 
         return { ...plainConfig, token: cfg.token };
     }
@@ -330,11 +325,10 @@
         }
 
         const sessionToken = session ? session.getItem(TOKEN_KEY) : '';
-        const localToken = local ? local.getItem(TOKEN_KEY) : '';
 
         return sanitizeConfig({
             ...base,
-            token: sessionToken || localToken || '',
+            token: sessionToken || '',
         });
     }
 
@@ -539,6 +533,7 @@
         saveGitHubConfig,
         loadGitHubConfig,
         getRemoteFile,
+        putRemoteFile,
         pullDb,
         pushDb,
         syncDb,

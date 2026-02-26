@@ -194,10 +194,9 @@
             border: 1px solid #1f1f1f;
             border-radius: 10px;
             box-shadow: 0 20px 50px rgba(0, 0, 0, 0.65);
-            display: flex;
+            display: none;
             z-index: 1450;
-            transform: translateX(-112%);
-            transition: transform 0.22s ease;
+            pointer-events: none;
         }
         body.app-mode .folder-sidebar {
             left: 10px;
@@ -213,7 +212,10 @@
             background: #0c0c0c;
         }
         body.app-mode.app-panel-open .folder-sidebar,
-        body.app-mode.app-panel-open .memo-list-bar { transform: translateX(0); }
+        body.app-mode.app-panel-open .memo-list-bar {
+            display: flex;
+            pointer-events: auto;
+        }
         body.app-mode .memo-list-header { padding: 12px 12px; }
         body.app-mode .memo-item { padding: 14px 12px; }
         body.app-mode .folder-item { padding: 11px 11px; }

@@ -6,13 +6,13 @@
     <meta name="theme-color" content="#000000">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="BLACK SPACE OS">
-    <link rel="manifest" href="./manifest.webmanifest?v=13">
-    <link rel="icon" href="./icon-192-v6.png?v=13" sizes="192x192" type="image/png">
-    <link rel="icon" href="./icon-bs-v6.svg?v=13" type="image/svg+xml">
-    <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon-v6.png?v=13">
-    <link rel="apple-touch-icon-precomposed" sizes="180x180" href="./apple-touch-icon-v6.png?v=13">
-    <title>BLACK SPACE OS - Monochrome Edition</title>
+    <meta name="apple-mobile-web-app-title" content="BLACK SPACE">
+    <link rel="manifest" href="./manifest.webmanifest?v=14">
+    <link rel="icon" href="./icon-192-v6.png?v=14" sizes="192x192" type="image/png">
+    <link rel="icon" href="./icon-bs-v6.svg?v=14" type="image/svg+xml">
+    <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon-v6.png?v=14">
+    <link rel="apple-touch-icon-precomposed" sizes="180x180" href="./apple-touch-icon-v6.png?v=14">
+    <title>BLACK SPACE</title>
     <style>
         /* [디자인 시스템 - 무채색 & 블랙] */
         :root {
@@ -473,10 +473,9 @@
 <!-- corner sync controls -->
 <div id="sync-fab" class="sync-fab">
     <button id="sync-main-btn" class="sync-main-btn sync-gear-btn" onclick="toggleSyncPanel(event)" title="Open sync tools" aria-label="Open sync tools">
-        <svg class="sync-gear-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round">
-            <circle cx="12" cy="12" r="3.4"></circle>
-            <circle cx="12" cy="12" r="7.2"></circle>
-            <path d="M12 3.8v2.1M12 18.1v2.1M3.8 12h2.1M18.1 12h2.1M6.3 6.3l1.5 1.5M16.2 16.2l1.5 1.5M17.7 6.3l-1.5 1.5M7.8 16.2l-1.5 1.5"></path>
+        <svg class="sync-gear-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3.1"></circle>
+            <path d="M12 4.4v1.7M12 17.9v1.7M4.4 12h1.7M17.9 12h1.7M6.7 6.7l1.2 1.2M16.1 16.1l1.2 1.2M17.3 6.7l-1.2 1.2M7.9 16.1l-1.2 1.2"></path>
         </svg>
     </button>
     <div id="sync-panel" class="sync-panel">
@@ -514,7 +513,7 @@
     const SECURITY_TOKEN_VAULT_KEY = 'BLACK_SPACE_TOKEN_VAULT';
     const SECURITY_ITERATIONS = 250000;
     const APP_BUILD_KEY = 'BLACK_SPACE_APP_BUILD';
-    const APP_BUILD = '2026-02-27-v13';
+    const APP_BUILD = '2026-02-27-v14';
 
     let db = loadLocalDb();
     let securityConfig = loadSecurityConfig();
@@ -597,7 +596,7 @@
         } catch (_err) {}
 
         const nextUrl = new URL(window.location.href);
-        nextUrl.searchParams.set('v', '13');
+        nextUrl.searchParams.set('v', '14');
         nextUrl.searchParams.set('b', String(Date.now()));
         window.location.replace(nextUrl.toString());
         return false;
@@ -875,7 +874,7 @@
     function registerServiceWorker() {
         if (!('serviceWorker' in navigator)) return;
         navigator.serviceWorker
-            .register('./sw.js?v=13', { updateViaCache: 'none' })
+            .register('./sw.js?v=14', { updateViaCache: 'none' })
             .then((registration) => registration.update())
             .catch((err) => {
                 console.warn('ServiceWorker registration failed:', err);

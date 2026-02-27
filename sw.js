@@ -1,13 +1,13 @@
-const CACHE_NAME = 'black-space-os-v9';
+const CACHE_NAME = 'black-space-os-v10';
 const APP_SHELL = [
   './',
   './index.html',
   './sync.js',
   './manifest.webmanifest',
-  './icon-bs-v5.svg',
-  './icon-192-v5.png',
-  './icon-512-v5.png',
-  './apple-touch-icon-v5.png'
+  './icon-bs-v6.svg',
+  './icon-192-v6.png',
+  './icon-512-v6.png',
+  './apple-touch-icon-v6.png'
 ];
 
 self.addEventListener('install', (event) => {

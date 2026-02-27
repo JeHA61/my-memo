@@ -7,11 +7,11 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="BLACK SPACE OS">
-    <link rel="manifest" href="./manifest.webmanifest?v=9">
-    <link rel="icon" href="./icon-192-v5.png?v=9" sizes="192x192" type="image/png">
-    <link rel="icon" href="./icon-bs-v5.svg?v=9" type="image/svg+xml">
-    <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon-v5.png?v=9">
-    <link rel="apple-touch-icon-precomposed" sizes="180x180" href="./apple-touch-icon-v5.png?v=9">
+    <link rel="manifest" href="./manifest.webmanifest?v=10">
+    <link rel="icon" href="./icon-192-v6.png?v=10" sizes="192x192" type="image/png">
+    <link rel="icon" href="./icon-bs-v6.svg?v=10" type="image/svg+xml">
+    <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon-v6.png?v=10">
+    <link rel="apple-touch-icon-precomposed" sizes="180x180" href="./apple-touch-icon-v6.png?v=10">
     <title>BLACK SPACE OS - Monochrome Edition</title>
     <style>
         /* [디자인 시스템 - 무채색 & 블랙] */
@@ -110,6 +110,17 @@
             cursor: pointer;
         }
         .sync-main-btn:hover { color: #fff; border-color: #555; }
+        .sync-main-btn.sync-gear-btn {
+            width: 36px;
+            height: 36px;
+            padding: 0;
+            border-radius: 9px;
+            font-size: 18px;
+            letter-spacing: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
         .sync-panel {
             display: none;
             flex-direction: column;
@@ -264,6 +275,7 @@
         @media (max-width: 768px) {
             .sync-fab { left: 14px; bottom: 16px; }
             .sync-main-btn { font-size: 9px; padding: 7px 10px; }
+            .sync-main-btn.sync-gear-btn { width: 34px; height: 34px; padding: 0; font-size: 17px; }
             .sync-action-btn { font-size: 10px; padding: 9px 10px; }
             .todo-fab { right: 86px; bottom: 16px; }
             .todo-panel { width: min(88vw, 300px); }
@@ -353,14 +365,14 @@
         body.app-mode .folder-sidebar-head { margin-bottom: 12px; padding: 0 2px; }
 
         body.app-mode .sync-fab {
-            left: calc(10px + 33% + 8px);
+            left: max(18px, calc(env(safe-area-inset-left) + 12px));
             right: auto;
             bottom: calc(env(safe-area-inset-bottom) + 38px);
             top: auto;
             z-index: 1512;
             display: none;
             align-items: flex-start;
-            max-width: calc(100vw - (10px + 33% + 8px) - 12px - env(safe-area-inset-right));
+            max-width: calc(100vw - 36px - env(safe-area-inset-left) - env(safe-area-inset-right));
             opacity: 1;
             transform: none;
             transition: opacity 0.2s ease;
@@ -374,7 +386,7 @@
             pointer-events: none;
         }
         body.app-mode .sync-panel {
-            max-width: calc(100vw - (10px + 33% + 8px) - 12px - env(safe-area-inset-right));
+            max-width: calc(100vw - 36px - env(safe-area-inset-left) - env(safe-area-inset-right));
         }
         body.app-mode .todo-fab {
             right: max(24px, calc(env(safe-area-inset-right) + 14px));
@@ -451,15 +463,12 @@
 
 <!-- corner sync controls -->
 <div id="sync-fab" class="sync-fab">
-    <button id="sync-main-btn" class="sync-main-btn" onclick="toggleSyncPanel(event)" oncontextmenu="openSyncAdvancedPanel(event)" title="Tap: sync / Long press: advanced">SYNC</button>
+    <button id="sync-main-btn" class="sync-main-btn sync-gear-btn" onclick="toggleSyncPanel(event)" title="Open sync tools" aria-label="Open sync tools">⚙</button>
     <div id="sync-panel" class="sync-panel">
-        <button class="sync-action-btn" onclick="runSyncPrimary()" title="Ctrl/Cmd+Shift+Y">SYNC</button>
-    </div>
-    <div id="sync-advanced-panel" class="sync-panel">
-        <button class="sync-action-btn" onclick="configureGitHubSync()" title="Ctrl/Cmd+Shift+G">SET</button>
-        <button class="sync-action-btn" onclick="pullFromGitHub()" title="Ctrl/Cmd+Shift+U">PULL</button>
+        <button class="sync-action-btn" onclick="syncWithGitHub()" title="Ctrl/Cmd+Shift+Y">SYNC</button>
         <button class="sync-action-btn" onclick="pushToGitHub()" title="Ctrl/Cmd+Shift+I">PUSH</button>
-        <button class="sync-action-btn" onclick="runSyncPrimary()" title="Ctrl/Cmd+Shift+Y">SYNC</button>
+        <button class="sync-action-btn" onclick="pullFromGitHub()" title="Ctrl/Cmd+Shift+U">PULL</button>
+        <button class="sync-action-btn" onclick="configureGitHubSync()" title="Ctrl/Cmd+Shift+G">SET</button>
     </div>
 </div>
 
@@ -490,7 +499,7 @@
     const SECURITY_TOKEN_VAULT_KEY = 'BLACK_SPACE_TOKEN_VAULT';
     const SECURITY_ITERATIONS = 250000;
     const APP_BUILD_KEY = 'BLACK_SPACE_APP_BUILD';
-    const APP_BUILD = '2026-02-27-v9';
+    const APP_BUILD = '2026-02-27-v10';
 
     let db = loadLocalDb();
     let securityConfig = loadSecurityConfig();
@@ -516,10 +525,6 @@
     const CLOUD_SYNC_DEBOUNCE_MS = 2500;
     let isAppMode = false;
     let appPanelOpen = false;
-    let syncLongPressTimer = null;
-    let syncLongPressTriggered = false;
-    let suppressNextSyncToggle = false;
-    const SYNC_LONG_PRESS_MS = 560;
 
     window.onload = async () => {
         const ready = await ensureBuildUpToDate();
@@ -531,7 +536,6 @@
         selectFolder(currentFolder);
         renderTodos();
         setupAutoSaveBindings();
-        setupSyncLongPressBinding();
         setupLongPressBindings();
         await unlockSecurityForSession();
         setupAutoSyncBindings();
@@ -578,7 +582,7 @@
         } catch (_err) {}
 
         const nextUrl = new URL(window.location.href);
-        nextUrl.searchParams.set('v', '9');
+        nextUrl.searchParams.set('v', '10');
         nextUrl.searchParams.set('b', String(Date.now()));
         window.location.replace(nextUrl.toString());
         return false;
@@ -625,10 +629,10 @@
         const todoFab = document.getElementById('todo-fab');
         if (!syncFab || !todoFab) return;
         const appBottomOffset = 'calc(env(safe-area-inset-bottom) + 38px)';
-        const syncLeftOffset = 'calc(10px + 33% + 8px)';
+        const syncLeftOffset = 'max(18px, calc(env(safe-area-inset-left) + 12px))';
         const todoRightOffset = 'max(24px, calc(env(safe-area-inset-right) + 14px))';
         const appFabMaxWidth = 'calc(100vw - 32px - env(safe-area-inset-left) - env(safe-area-inset-right))';
-        const syncFabMaxWidth = 'calc(100vw - (10px + 33% + 8px) - 12px - env(safe-area-inset-right))';
+        const syncFabMaxWidth = 'calc(100vw - 36px - env(safe-area-inset-left) - env(safe-area-inset-right))';
 
         if (!isAppMode) {
             syncFab.style.display = '';
@@ -752,90 +756,12 @@
 
     function closeSyncPanels() {
         document.getElementById('sync-panel').classList.remove('open');
-        document.getElementById('sync-advanced-panel').classList.remove('open');
-    }
-
-    function setupSyncLongPressBinding() {
-        const button = document.getElementById('sync-main-btn');
-        if (!button) return;
-
-        const clearTimer = () => {
-            if (!syncLongPressTimer) return;
-            clearTimeout(syncLongPressTimer);
-            syncLongPressTimer = null;
-        };
-
-        const onPressStart = () => {
-            syncLongPressTriggered = false;
-            clearTimer();
-            syncLongPressTimer = setTimeout(() => {
-                syncLongPressTriggered = true;
-                suppressNextSyncToggle = true;
-                openSyncAdvancedPanel();
-            }, SYNC_LONG_PRESS_MS);
-        };
-
-        const onPressEnd = (event) => {
-            clearTimer();
-            if (syncLongPressTriggered && event) {
-                event.preventDefault();
-                event.stopPropagation();
-            }
-            syncLongPressTriggered = false;
-        };
-
-        button.addEventListener('mousedown', onPressStart);
-        button.addEventListener('mouseup', onPressEnd);
-        button.addEventListener('mouseleave', onPressEnd);
-
-        button.addEventListener('touchstart', onPressStart, { passive: true });
-        button.addEventListener(
-            'touchmove',
-            () => {
-                clearTimer();
-            },
-            { passive: true }
-        );
-        button.addEventListener('touchend', onPressEnd, { passive: false });
-        button.addEventListener('touchcancel', onPressEnd, { passive: false });
     }
 
     function toggleSyncPanel(event) {
         if (event) event.stopPropagation();
-        if (suppressNextSyncToggle) {
-            suppressNextSyncToggle = false;
-            return;
-        }
         const panel = document.getElementById('sync-panel');
-        document.getElementById('sync-advanced-panel').classList.remove('open');
         panel.classList.toggle('open');
-    }
-
-    function openSyncAdvancedPanel(event) {
-        if (event) {
-            event.preventDefault();
-            event.stopPropagation();
-        }
-        document.getElementById('sync-panel').classList.remove('open');
-        document.getElementById('sync-advanced-panel').classList.add('open');
-    }
-
-    async function runSyncPrimary() {
-        closeSyncPanels();
-        if (!Sync) return alert('sync.js is not loaded.');
-
-        try {
-            await getGitHubConfigOrThrow({ silent: true });
-        } catch (_err) {
-            await configureGitHubSync();
-            try {
-                await getGitHubConfigOrThrow({ silent: true });
-            } catch (_err2) {
-                return;
-            }
-        }
-
-        await syncWithGitHub();
     }
 
     function toggleTodoPanel(event) {
@@ -933,7 +859,7 @@
     function registerServiceWorker() {
         if (!('serviceWorker' in navigator)) return;
         navigator.serviceWorker
-            .register('./sw.js?v=9', { updateViaCache: 'none' })
+            .register('./sw.js?v=10', { updateViaCache: 'none' })
             .then((registration) => registration.update())
             .catch((err) => {
                 console.warn('ServiceWorker registration failed:', err);
@@ -1966,8 +1892,6 @@
     window.pullFromGitHub = pullFromGitHub;
     window.pushToGitHub = pushToGitHub;
     window.syncWithGitHub = syncWithGitHub;
-    window.runSyncPrimary = runSyncPrimary;
-    window.openSyncAdvancedPanel = openSyncAdvancedPanel;
     window.toggleSyncPanel = toggleSyncPanel;
     window.toggleTodoPanel = toggleTodoPanel;
     window.handleTodoInputKey = handleTodoInputKey;

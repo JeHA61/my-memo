@@ -7,11 +7,11 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="BLACK SPACE">
-    <link rel="manifest" href="./manifest.webmanifest?v=15">
-    <link rel="icon" href="./icon-192-v6.png?v=15" sizes="192x192" type="image/png">
-    <link rel="icon" href="./icon-bs-v6.svg?v=15" type="image/svg+xml">
-    <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon-v6.png?v=15">
-    <link rel="apple-touch-icon-precomposed" sizes="180x180" href="./apple-touch-icon-v6.png?v=15">
+    <link rel="manifest" href="./manifest.webmanifest?v=16">
+    <link rel="icon" href="./icon-192-v6.png?v=16" sizes="192x192" type="image/png">
+    <link rel="icon" href="./icon-bs-v6.svg?v=16" type="image/svg+xml">
+    <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon-v6.png?v=16">
+    <link rel="apple-touch-icon-precomposed" sizes="180x180" href="./apple-touch-icon-v6.png?v=16">
     <title>BLACK SPACE</title>
     <style>
         /* [디자인 시스템 - 무채색 & 블랙] */
@@ -513,7 +513,7 @@
     const SECURITY_TOKEN_VAULT_KEY = 'BLACK_SPACE_TOKEN_VAULT';
     const SECURITY_ITERATIONS = 250000;
     const APP_BUILD_KEY = 'BLACK_SPACE_APP_BUILD';
-    const APP_BUILD = '2026-02-27-v15';
+    const APP_BUILD = '2026-02-27-v16';
 
     let db = loadLocalDb();
     let securityConfig = loadSecurityConfig();
@@ -596,7 +596,7 @@
         } catch (_err) {}
 
         const nextUrl = new URL(window.location.href);
-        nextUrl.searchParams.set('v', '15');
+        nextUrl.searchParams.set('v', '16');
         nextUrl.searchParams.set('b', String(Date.now()));
         window.location.replace(nextUrl.toString());
         return false;
@@ -626,7 +626,19 @@
         else document.body.classList.remove('app-writing');
     }
 
+    function isDesktopLayoutForced() {
+        try {
+            const params = new URLSearchParams(window.location.search || '');
+            const layout = String(params.get('layout') || '').toLowerCase();
+            const mode = String(params.get('mode') || '').toLowerCase();
+            return layout === 'desktop' || mode === 'web';
+        } catch (_err) {
+            return false;
+        }
+    }
+
     function detectStandaloneApp() {
+        if (isDesktopLayoutForced()) return false;
         const mediaStandalone =
             window.matchMedia &&
             (
@@ -874,7 +886,7 @@
     function registerServiceWorker() {
         if (!('serviceWorker' in navigator)) return;
         navigator.serviceWorker
-            .register('./sw.js?v=15', { updateViaCache: 'none' })
+            .register('./sw.js?v=16', { updateViaCache: 'none' })
             .then((registration) => registration.update())
             .catch((err) => {
                 console.warn('ServiceWorker registration failed:', err);

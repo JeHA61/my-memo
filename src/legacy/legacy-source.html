@@ -7,11 +7,11 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="BLACK SPACE">
-    <link rel="manifest" href="./manifest.webmanifest?v=35">
-    <link rel="icon" href="./icon-192-v6.png?v=35" sizes="192x192" type="image/png">
-    <link rel="icon" href="./icon-bs-v6.svg?v=35" type="image/svg+xml">
-    <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon-v6.png?v=35">
-    <link rel="apple-touch-icon-precomposed" sizes="180x180" href="./apple-touch-icon-v6.png?v=35">
+    <link rel="manifest" href="./manifest.webmanifest?v=36">
+    <link rel="icon" href="./icon-192-v6.png?v=36" sizes="192x192" type="image/png">
+    <link rel="icon" href="./icon-bs-v6.svg?v=36" type="image/svg+xml">
+    <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon-v6.png?v=36">
+    <link rel="apple-touch-icon-precomposed" sizes="180x180" href="./apple-touch-icon-v6.png?v=36">
     <title>BLACK SPACE</title>
     <style>
         /* [디자인 시스템 - 무채색 & 블랙] */
@@ -198,6 +198,12 @@
             justify-content: center;
         }
         .todo-main-btn:hover { color: #fff; border-color: #555; }
+        .todo-main-icon {
+            width: 16px;
+            height: 16px;
+            display: block;
+            pointer-events: none;
+        }
         .todo-panel {
             display: none;
             position: fixed;
@@ -512,7 +518,14 @@
 </div>
 
 <div id="todo-fab" class="todo-fab">
-    <button class="todo-main-btn" onclick="toggleTodoPanel(event)" title="Open to-do list">TODO</button>
+    <button class="todo-main-btn" onclick="toggleTodoPanel(event)" title="Open to-do list" aria-label="Open to-do list">
+        <svg class="todo-main-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="4.2" y="4.2" width="15.6" height="15.6" rx="3"></rect>
+            <path d="M8 9.4h7.2M8 14.6h7.2"></path>
+            <circle cx="6.4" cy="9.4" r="0.9" fill="currentColor" stroke="none"></circle>
+            <circle cx="6.4" cy="14.6" r="0.9" fill="currentColor" stroke="none"></circle>
+        </svg>
+    </button>
     <div id="todo-panel" class="todo-panel">
         <div class="todo-head">
             <span id="todo-stats">No tasks</span>
@@ -538,7 +551,7 @@
     const SECURITY_TOKEN_VAULT_KEY = 'BLACK_SPACE_TOKEN_VAULT';
     const SECURITY_ITERATIONS = 250000;
     const APP_BUILD_KEY = 'BLACK_SPACE_APP_BUILD';
-    const APP_BUILD = '2026-02-28-v35';
+    const APP_BUILD = '2026-02-28-v36';
 
     let db = loadLocalDb();
     let securityConfig = loadSecurityConfig();
@@ -621,7 +634,7 @@
         } catch (_err) {}
 
         const nextUrl = new URL(window.location.href);
-        nextUrl.searchParams.set('v', '35');
+        nextUrl.searchParams.set('v', '36');
         nextUrl.searchParams.set('b', String(Date.now()));
         window.location.replace(nextUrl.toString());
         return false;
@@ -963,7 +976,7 @@
     function registerServiceWorker() {
         if (!('serviceWorker' in navigator)) return;
         navigator.serviceWorker
-            .register('./sw.js?v=35', { updateViaCache: 'none' })
+            .register('./sw.js?v=36', { updateViaCache: 'none' })
             .then((registration) => registration.update())
             .catch((err) => {
                 console.warn('ServiceWorker registration failed:', err);

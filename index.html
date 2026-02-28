@@ -7,11 +7,11 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="BLACK SPACE">
-    <link rel="manifest" href="./manifest.webmanifest?v=21">
-    <link rel="icon" href="./icon-192-v6.png?v=21" sizes="192x192" type="image/png">
-    <link rel="icon" href="./icon-bs-v6.svg?v=21" type="image/svg+xml">
-    <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon-v6.png?v=21">
-    <link rel="apple-touch-icon-precomposed" sizes="180x180" href="./apple-touch-icon-v6.png?v=21">
+    <link rel="manifest" href="./manifest.webmanifest?v=22">
+    <link rel="icon" href="./icon-192-v6.png?v=22" sizes="192x192" type="image/png">
+    <link rel="icon" href="./icon-bs-v6.svg?v=22" type="image/svg+xml">
+    <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon-v6.png?v=22">
+    <link rel="apple-touch-icon-precomposed" sizes="180x180" href="./apple-touch-icon-v6.png?v=22">
     <title>BLACK SPACE</title>
     <style>
         /* [디자인 시스템 - 무채색 & 블랙] */
@@ -108,14 +108,13 @@
         /* GitHub sync controls (corner, low distraction) */
         .sync-fab {
             position: fixed;
-            left: auto;
-            right: 98px;
-            bottom: 92px;
+            left: 22px;
+            bottom: 28px;
             z-index: 1200;
             display: flex;
             flex-direction: column;
             gap: 8px;
-            align-items: flex-end;
+            align-items: flex-start;
         }
         .sync-main-btn {
             border: 1px solid #333;
@@ -173,12 +172,13 @@
 
         .todo-fab {
             position: fixed;
-            right: 98px;
+            left: 22px;
+            right: auto;
             bottom: 40px;
             z-index: 1190;
             display: flex;
             flex-direction: column;
-            align-items: flex-end;
+            align-items: flex-start;
             gap: 8px;
         }
         .todo-main-btn {
@@ -304,12 +304,12 @@
         }
 
         @media (max-width: 768px) {
-            .sync-fab { right: 86px; bottom: 76px; }
+            .sync-fab { left: 14px; bottom: 16px; }
             .sync-main-btn { font-size: 9px; padding: 7px 10px; }
             .sync-main-btn.sync-gear-btn { width: 36px; height: 36px; padding: 0; }
             .sync-gear-icon { width: 18px; height: 18px; }
             .sync-action-btn { font-size: 10px; padding: 9px 10px; }
-            .todo-fab { right: 86px; bottom: 16px; }
+            .todo-fab { left: 14px; right: auto; bottom: 58px; }
             .todo-panel { width: min(88vw, 300px); }
         }
 
@@ -421,7 +421,7 @@
             max-width: calc(100vw - 24px - env(safe-area-inset-left) - env(safe-area-inset-right));
         }
         body.app-mode .todo-fab {
-            right: max(24px, calc(env(safe-area-inset-right) + 14px));
+            right: max(12px, calc(env(safe-area-inset-right) + 4px));
             bottom: calc(env(safe-area-inset-bottom) + 38px);
             z-index: 1520;
             left: auto;
@@ -536,7 +536,7 @@
     const SECURITY_TOKEN_VAULT_KEY = 'BLACK_SPACE_TOKEN_VAULT';
     const SECURITY_ITERATIONS = 250000;
     const APP_BUILD_KEY = 'BLACK_SPACE_APP_BUILD';
-    const APP_BUILD = '2026-02-28-v21';
+    const APP_BUILD = '2026-02-28-v22';
 
     let db = loadLocalDb();
     let securityConfig = loadSecurityConfig();
@@ -619,7 +619,7 @@
         } catch (_err) {}
 
         const nextUrl = new URL(window.location.href);
-        nextUrl.searchParams.set('v', '21');
+        nextUrl.searchParams.set('v', '22');
         nextUrl.searchParams.set('b', String(Date.now()));
         window.location.replace(nextUrl.toString());
         return false;
@@ -683,36 +683,31 @@
         const syncFab = document.getElementById('sync-fab');
         const todoFab = document.getElementById('todo-fab');
         if (!syncFab || !todoFab) return;
-        const divider = document.querySelector('.editor-view .divider');
         const appBottomOffset = 'calc(env(safe-area-inset-bottom) + 38px)';
         const appTopOffset = 'calc(env(safe-area-inset-top) + 12px)';
-        const appRightOffset = 'max(18px, calc(env(safe-area-inset-right) + 10px))';
+        const syncRightOffset = 'max(12px, calc(env(safe-area-inset-right) + 4px))';
         const appFabMaxWidth = 'calc(100vw - 32px - env(safe-area-inset-left) - env(safe-area-inset-right))';
         const syncFabMaxWidth = 'calc(100vw - 24px - env(safe-area-inset-left) - env(safe-area-inset-right))';
 
         if (!isAppMode) {
-            const dividerRect = divider ? divider.getBoundingClientRect() : null;
-            const dividerRight = dividerRect ? dividerRect.right : window.innerWidth - 98;
-            const desktopRight = Math.max(16, Math.round(window.innerWidth - dividerRight));
-
-            syncFab.style.display = 'flex';
-            syncFab.style.position = 'fixed';
-            syncFab.style.left = 'auto';
-            syncFab.style.right = `${desktopRight}px`;
-            syncFab.style.top = 'auto';
-            syncFab.style.bottom = '92px';
+            syncFab.style.display = '';
+            syncFab.style.position = '';
+            syncFab.style.left = '';
+            syncFab.style.right = '';
+            syncFab.style.top = '';
+            syncFab.style.bottom = '';
             syncFab.style.maxWidth = '';
-            syncFab.style.zIndex = '1200';
-            syncFab.style.alignItems = 'flex-end';
+            syncFab.style.zIndex = '';
+            syncFab.style.alignItems = '';
 
-            todoFab.style.position = 'fixed';
-            todoFab.style.display = 'flex';
-            todoFab.style.right = `${desktopRight}px`;
-            todoFab.style.bottom = '40px';
-            todoFab.style.left = 'auto';
+            todoFab.style.position = '';
+            todoFab.style.display = '';
+            todoFab.style.right = '';
+            todoFab.style.bottom = '';
+            todoFab.style.left = '';
             todoFab.style.maxWidth = '';
-            todoFab.style.zIndex = '1190';
-            todoFab.style.alignItems = 'flex-end';
+            todoFab.style.zIndex = '';
+            todoFab.style.alignItems = '';
             return;
         }
 
@@ -721,7 +716,7 @@
             syncFab.style.position = 'fixed';
             syncFab.style.left = 'auto';
             syncFab.style.top = appTopOffset;
-            syncFab.style.right = appRightOffset;
+            syncFab.style.right = syncRightOffset;
             syncFab.style.bottom = 'auto';
             syncFab.style.maxWidth = syncFabMaxWidth;
             syncFab.style.zIndex = '1512';
@@ -736,7 +731,7 @@
         } else {
             todoFab.style.display = 'flex';
             todoFab.style.position = 'fixed';
-            todoFab.style.right = appRightOffset;
+            todoFab.style.right = syncRightOffset;
             todoFab.style.bottom = appBottomOffset;
             todoFab.style.left = 'auto';
             todoFab.style.maxWidth = appFabMaxWidth;
@@ -919,7 +914,7 @@
     function registerServiceWorker() {
         if (!('serviceWorker' in navigator)) return;
         navigator.serviceWorker
-            .register('./sw.js?v=21', { updateViaCache: 'none' })
+            .register('./sw.js?v=22', { updateViaCache: 'none' })
             .then((registration) => registration.update())
             .catch((err) => {
                 console.warn('ServiceWorker registration failed:', err);

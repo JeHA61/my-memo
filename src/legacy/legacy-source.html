@@ -7,11 +7,11 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="BLACK SPACE">
-    <link rel="manifest" href="./manifest.webmanifest?v=40">
-    <link rel="icon" href="./icon-192-v6.png?v=40" sizes="192x192" type="image/png">
-    <link rel="icon" href="./icon-bs-v6.svg?v=40" type="image/svg+xml">
-    <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon-v6.png?v=40">
-    <link rel="apple-touch-icon-precomposed" sizes="180x180" href="./apple-touch-icon-v6.png?v=40">
+    <link rel="manifest" href="./manifest.webmanifest?v=41">
+    <link rel="icon" href="./icon-192-v6.png?v=41" sizes="192x192" type="image/png">
+    <link rel="icon" href="./icon-bs-v6.svg?v=41" type="image/svg+xml">
+    <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon-v6.png?v=41">
+    <link rel="apple-touch-icon-precomposed" sizes="180x180" href="./apple-touch-icon-v6.png?v=41">
     <title>BLACK SPACE</title>
     <style>
         /* [디자인 시스템 - 무채색 & 블랙] */
@@ -570,7 +570,7 @@
     const SECURITY_TOKEN_VAULT_KEY = 'BLACK_SPACE_TOKEN_VAULT';
     const SECURITY_ITERATIONS = 250000;
     const APP_BUILD_KEY = 'BLACK_SPACE_APP_BUILD';
-    const APP_BUILD = '2026-02-28-v40';
+    const APP_BUILD = '2026-02-28-v41';
 
     let db = loadLocalDb();
     let securityConfig = loadSecurityConfig();
@@ -608,6 +608,7 @@
         renderTodos();
         setupAutoSaveBindings();
         setupLongPressBindings();
+        setupContextMenuBindings();
         await unlockSecurityForSession({ silent: true });
         setupAutoSyncBindings();
         registerServiceWorker();
@@ -653,7 +654,7 @@
         } catch (_err) {}
 
         const nextUrl = new URL(window.location.href);
-        nextUrl.searchParams.set('v', '40');
+        nextUrl.searchParams.set('v', '41');
         nextUrl.searchParams.set('b', String(Date.now()));
         window.location.replace(nextUrl.toString());
         return false;
@@ -995,7 +996,7 @@
     function registerServiceWorker() {
         if (!('serviceWorker' in navigator)) return;
         navigator.serviceWorker
-            .register('./sw.js?v=40', { updateViaCache: 'none' })
+            .register('./sw.js?v=41', { updateViaCache: 'none' })
             .then((registration) => registration.update())
             .catch((err) => {
                 console.warn('ServiceWorker registration failed:', err);
@@ -1317,6 +1318,43 @@
     function bindLongPress(container, itemSelector, dataKey, onLongPress) {
         if (!container) return;
 
+        const startLongPress = (key, pageX, pageY) => {
+            clearLongPressTimer();
+            longPressState = {
+                key,
+                startX: pageX,
+                startY: pageY,
+                triggered: false,
+            };
+
+            longPressTimer = setTimeout(() => {
+                if (!longPressState || longPressState.key !== key) return;
+                longPressState.triggered = true;
+                onLongPress(key, longPressState.startX, longPressState.startY);
+            }, LONG_PRESS_MS);
+        };
+
+        const handleMove = (pageX, pageY) => {
+            if (!longPressState) return;
+            const dx = Math.abs(pageX - longPressState.startX);
+            const dy = Math.abs(pageY - longPressState.startY);
+            if (dx > LONG_PRESS_MOVE_PX || dy > LONG_PRESS_MOVE_PX) {
+                clearLongPressTimer();
+                longPressState = null;
+            }
+        };
+
+        const finishLongPress = (event) => {
+            if (!longPressState) return;
+            const wasTriggered = longPressState.triggered;
+            clearLongPressTimer();
+            longPressState = null;
+            if (wasTriggered && event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+        };
+
         container.addEventListener(
             'touchstart',
             (event) => {
@@ -1326,20 +1364,7 @@
                 if (!key) return;
                 const touch = event.touches && event.touches[0];
                 if (!touch) return;
-
-                clearLongPressTimer();
-                longPressState = {
-                    key,
-                    startX: touch.pageX,
-                    startY: touch.pageY,
-                    triggered: false,
-                };
-
-                longPressTimer = setTimeout(() => {
-                    if (!longPressState || longPressState.key !== key) return;
-                    longPressState.triggered = true;
-                    onLongPress(key, longPressState.startX, longPressState.startY);
-                }, LONG_PRESS_MS);
+                startLongPress(key, touch.pageX, touch.pageY);
             },
             { passive: true }
         );
@@ -1350,29 +1375,44 @@
                 if (!longPressState) return;
                 const touch = event.touches && event.touches[0];
                 if (!touch) return;
-                const dx = Math.abs(touch.pageX - longPressState.startX);
-                const dy = Math.abs(touch.pageY - longPressState.startY);
-                if (dx > LONG_PRESS_MOVE_PX || dy > LONG_PRESS_MOVE_PX) {
-                    clearLongPressTimer();
-                    longPressState = null;
-                }
+                handleMove(touch.pageX, touch.pageY);
             },
             { passive: true }
         );
 
-        const touchEndHandler = (event) => {
-            if (!longPressState) return;
-            const wasTriggered = longPressState.triggered;
-            clearLongPressTimer();
-            longPressState = null;
-            if (wasTriggered) {
-                event.preventDefault();
-                event.stopPropagation();
-            }
-        };
+        const touchEndHandler = (event) => finishLongPress(event);
 
         container.addEventListener('touchend', touchEndHandler, { passive: false });
         container.addEventListener('touchcancel', touchEndHandler, { passive: false });
+
+        // Pointer fallback for environments where long-press touch events are unreliable.
+        container.addEventListener('pointerdown', (event) => {
+            if (event.pointerType === 'touch') return;
+            if (event.button !== 0) return;
+            const item = event.target.closest(itemSelector);
+            if (!item) return;
+            const key = item.getAttribute(dataKey);
+            if (!key) return;
+            startLongPress(key, event.pageX, event.pageY);
+        });
+
+        container.addEventListener('pointermove', (event) => {
+            if (event.pointerType === 'touch') return;
+            if (!longPressState) return;
+            handleMove(event.pageX, event.pageY);
+        });
+
+        const pointerEndHandler = (event) => {
+            if (event.pointerType === 'touch') return;
+            finishLongPress(event);
+        };
+        container.addEventListener('pointerup', pointerEndHandler);
+        container.addEventListener('pointercancel', pointerEndHandler);
+        container.addEventListener('pointerleave', (event) => {
+            if (event.pointerType === 'touch') return;
+            clearLongPressTimer();
+            longPressState = null;
+        });
     }
 
     function setupLongPressBindings() {
@@ -1388,6 +1428,33 @@
             suppressNextTapMemo = id;
             openMemoCtxAt(pageX, pageY, id);
         });
+    }
+
+    function setupContextMenuBindings() {
+        const folderList = document.getElementById('folder-list');
+        const memoList = document.getElementById('memo-list-container');
+
+        if (folderList) {
+            folderList.addEventListener('contextmenu', (event) => {
+                if (event.defaultPrevented) return;
+                const item = event.target.closest('.folder-item');
+                if (!item) return;
+                const folder = item.getAttribute('data-folder');
+                if (!folder) return;
+                showFolderCtx(event, folder);
+            });
+        }
+
+        if (memoList) {
+            memoList.addEventListener('contextmenu', (event) => {
+                if (event.defaultPrevented) return;
+                const item = event.target.closest('.memo-item');
+                if (!item) return;
+                const id = item.getAttribute('data-id');
+                if (!id) return;
+                showMemoCtx(event, id);
+            });
+        }
     }
 
     function clearEditor() {
@@ -2046,6 +2113,18 @@
     window.clearDoneTodos = clearDoneTodos;
     window.toggleAppPanel = toggleAppPanel;
     window.closeAppPanel = closeAppPanel;
+    window.addFolder = addFolder;
+    window.addMemo = addMemo;
+    window.handleImageUpload = handleImageUpload;
+    window.renameFolder = renameFolder;
+    window.pasteMemo = pasteMemo;
+    window.deleteFolder = deleteFolder;
+    window.copyMemo = copyMemo;
+    window.deleteMemo = deleteMemo;
+    window.selectFolder = selectFolder;
+    window.selectMemo = selectMemo;
+    window.showFolderCtx = showFolderCtx;
+    window.showMemoCtx = showMemoCtx;
 </script>
 </body>
 </html>

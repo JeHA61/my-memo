@@ -7,11 +7,11 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="BLACK SPACE" />
-    <link rel="manifest" href="./manifest.webmanifest?v=34" />
-    <link rel="icon" href="./icon-192-v6.png?v=34" sizes="192x192" type="image/png" />
-    <link rel="icon" href="./icon-bs-v6.svg?v=34" type="image/svg+xml" />
-    <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon-v6.png?v=34" />
-    <link rel="apple-touch-icon-precomposed" sizes="180x180" href="./apple-touch-icon-v6.png?v=34" />
+    <link rel="manifest" href="./manifest.webmanifest?v=35" />
+    <link rel="icon" href="./icon-192-v6.png?v=35" sizes="192x192" type="image/png" />
+    <link rel="icon" href="./icon-bs-v6.svg?v=35" type="image/svg+xml" />
+    <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon-v6.png?v=35" />
+    <link rel="apple-touch-icon-precomposed" sizes="180x180" href="./apple-touch-icon-v6.png?v=35" />
     <title>BLACK SPACE</title>
   </head>
   <body>
@@ -25,5 +25,90 @@
       }
     </script>
     <script type="module" src="./src/main.js"></script>
+    <script>
+      (() => {
+        let fallbackStarted = false;
+
+        const loadSyncScript = () => new Promise((resolve, reject) => {
+          if (window.Sync) {
+            resolve();
+            return;
+          }
+
+          const existing = document.querySelector('script[data-sync-loader="fallback"]');
+          if (existing) {
+            existing.addEventListener('load', () => resolve(), { once: true });
+            existing.addEventListener('error', () => reject(new Error('sync.js load failed')), { once: true });
+            return;
+          }
+
+          const script = document.createElement('script');
+          script.src = './sync.js?v=35';
+          script.async = true;
+          script.setAttribute('data-sync-loader', 'fallback');
+          script.onload = () => resolve();
+          script.onerror = () => reject(new Error('sync.js load failed'));
+          document.head.appendChild(script);
+        });
+
+        window.__BLACKSPACE_LEGACY_FALLBACK__ = async (reason) => {
+          if (fallbackStarted) return;
+          fallbackStarted = true;
+          try {
+            const response = await fetch('./src/legacy/legacy-source.html', { cache: 'no-store' });
+            if (!response.ok) throw new Error(`fallback source load failed: ${response.status}`);
+            const htmlText = await response.text();
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(htmlText, 'text/html');
+
+            const styleText = doc.querySelector('style')?.textContent || '';
+            if (styleText && !document.querySelector('style[data-legacy-style="blackspace-fallback"]')) {
+              const styleTag = document.createElement('style');
+              styleTag.setAttribute('data-legacy-style', 'blackspace-fallback');
+              styleTag.textContent = styleText;
+              document.head.appendChild(styleTag);
+            }
+
+            const bodyNode = doc.body;
+            const inlineScripts = Array.from(bodyNode.querySelectorAll('script:not([src])'));
+            const lastInlineScript = inlineScripts[inlineScripts.length - 1] || null;
+            const scriptText = lastInlineScript?.textContent || '';
+
+            const bodyClone = bodyNode.cloneNode(true);
+            bodyClone.querySelectorAll('script').forEach((script) => script.remove());
+            const root = document.getElementById('root');
+            if (!root) return;
+            root.innerHTML = bodyClone.innerHTML.trim();
+
+            await loadSyncScript();
+
+            if (scriptText.trim()) {
+              const runner = new Function(scriptText);
+              runner();
+            }
+            if (typeof window.onload === 'function') await window.onload();
+          } catch (error) {
+            console.error('[BLACK SPACE] legacy fallback failed:', reason, error);
+          }
+        };
+
+        window.addEventListener(
+          'error',
+          (event) => {
+            const target = event && event.target;
+            if (target && target.tagName === 'SCRIPT' && target.getAttribute('type') === 'module') {
+              window.__BLACKSPACE_LEGACY_FALLBACK__('module-script-error');
+            }
+          },
+          true
+        );
+
+        setTimeout(() => {
+          if (window.__BLACKSPACE_MODULE_BOOT__ === true) return;
+          if (document.querySelector('.app-container')) return;
+          window.__BLACKSPACE_LEGACY_FALLBACK__('module-boot-timeout');
+        }, 2500);
+      })();
+    </script>
   </body>
 </html>

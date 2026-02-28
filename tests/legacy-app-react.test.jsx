@@ -1,9 +1,9 @@
 import { render, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import LegacyApp from '../src/components/LegacyApp.jsx';
+import LegacyApp from '../src/components/LegacyApp.js';
 
 beforeEach(() => {
-  window.localStorage.setItem('BLACK_SPACE_APP_BUILD', '2026-02-28-v32');
+  window.localStorage.setItem('BLACK_SPACE_APP_BUILD', '2026-02-28-v33');
   const html = `
   <!doctype html>
   <html>

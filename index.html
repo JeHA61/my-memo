@@ -7,11 +7,11 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="BLACK SPACE">
-    <link rel="manifest" href="./manifest.webmanifest?v=23">
-    <link rel="icon" href="./icon-192-v6.png?v=23" sizes="192x192" type="image/png">
-    <link rel="icon" href="./icon-bs-v6.svg?v=23" type="image/svg+xml">
-    <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon-v6.png?v=23">
-    <link rel="apple-touch-icon-precomposed" sizes="180x180" href="./apple-touch-icon-v6.png?v=23">
+    <link rel="manifest" href="./manifest.webmanifest?v=24">
+    <link rel="icon" href="./icon-192-v6.png?v=24" sizes="192x192" type="image/png">
+    <link rel="icon" href="./icon-bs-v6.svg?v=24" type="image/svg+xml">
+    <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon-v6.png?v=24">
+    <link rel="apple-touch-icon-precomposed" sizes="180x180" href="./apple-touch-icon-v6.png?v=24">
     <title>BLACK SPACE</title>
     <style>
         /* [디자인 시스템 - 무채색 & 블랙] */
@@ -536,7 +536,7 @@
     const SECURITY_TOKEN_VAULT_KEY = 'BLACK_SPACE_TOKEN_VAULT';
     const SECURITY_ITERATIONS = 250000;
     const APP_BUILD_KEY = 'BLACK_SPACE_APP_BUILD';
-    const APP_BUILD = '2026-02-28-v23';
+    const APP_BUILD = '2026-02-28-v24';
 
     let db = loadLocalDb();
     let securityConfig = loadSecurityConfig();
@@ -619,7 +619,7 @@
         } catch (_err) {}
 
         const nextUrl = new URL(window.location.href);
-        nextUrl.searchParams.set('v', '23');
+        nextUrl.searchParams.set('v', '24');
         nextUrl.searchParams.set('b', String(Date.now()));
         window.location.replace(nextUrl.toString());
         return false;
@@ -683,11 +683,23 @@
         const syncFab = document.getElementById('sync-fab');
         const todoFab = document.getElementById('todo-fab');
         if (!syncFab || !todoFab) return;
+        const memoListBar = document.getElementById('memo-list-bar');
+        const clipBtn = document.querySelector('.clip-btn');
+        const divider = document.querySelector('.editor-view .divider');
         const appBottomOffset = 'calc(env(safe-area-inset-bottom) + 38px)';
         const appTopOffset = 'calc(env(safe-area-inset-top) + 12px)';
         const syncRightOffset = 'max(12px, calc(env(safe-area-inset-right) + 4px))';
         const appFabMaxWidth = 'calc(100vw - 32px - env(safe-area-inset-left) - env(safe-area-inset-right))';
         const syncFabMaxWidth = 'calc(100vw - 24px - env(safe-area-inset-left) - env(safe-area-inset-right))';
+        let panelAlignedRightOffset = syncRightOffset;
+
+        if (isAppMode && appPanelOpen && memoListBar) {
+            const panelRect = memoListBar.getBoundingClientRect();
+            if (panelRect && panelRect.width > 0) {
+                const rightPx = Math.max(8, Math.round(window.innerWidth - panelRect.right));
+                panelAlignedRightOffset = `${rightPx}px`;
+            }
+        }
 
         if (!isAppMode) {
             syncFab.style.display = '';
@@ -700,14 +712,26 @@
             syncFab.style.zIndex = '';
             syncFab.style.alignItems = '';
 
-            todoFab.style.position = '';
-            todoFab.style.display = '';
-            todoFab.style.right = '';
-            todoFab.style.bottom = '';
-            todoFab.style.left = '';
+            const rightRefs = [];
+            if (clipBtn) {
+                const clipRect = clipBtn.getBoundingClientRect();
+                if (clipRect && clipRect.width > 0) rightRefs.push(clipRect.right);
+            }
+            if (divider) {
+                const dividerRect = divider.getBoundingClientRect();
+                if (dividerRect && dividerRect.width > 0) rightRefs.push(dividerRect.right);
+            }
+            const refRight = rightRefs.length > 0 ? Math.max(...rightRefs) : null;
+            const desktopTodoRightPx = refRight ? Math.max(18, Math.round(window.innerWidth - refRight)) : 98;
+
+            todoFab.style.position = 'fixed';
+            todoFab.style.display = 'flex';
+            todoFab.style.right = `${desktopTodoRightPx}px`;
+            todoFab.style.bottom = '40px';
+            todoFab.style.left = 'auto';
             todoFab.style.maxWidth = '';
-            todoFab.style.zIndex = '';
-            todoFab.style.alignItems = '';
+            todoFab.style.zIndex = '1190';
+            todoFab.style.alignItems = 'flex-end';
             return;
         }
 
@@ -716,7 +740,7 @@
             syncFab.style.position = 'fixed';
             syncFab.style.left = 'auto';
             syncFab.style.top = appTopOffset;
-            syncFab.style.right = syncRightOffset;
+            syncFab.style.right = panelAlignedRightOffset;
             syncFab.style.bottom = 'auto';
             syncFab.style.maxWidth = syncFabMaxWidth;
             syncFab.style.zIndex = '1512';
@@ -731,7 +755,7 @@
         } else {
             todoFab.style.display = 'flex';
             todoFab.style.position = 'fixed';
-            todoFab.style.right = syncRightOffset;
+            todoFab.style.right = panelAlignedRightOffset;
             todoFab.style.bottom = appBottomOffset;
             todoFab.style.left = 'auto';
             todoFab.style.maxWidth = appFabMaxWidth;
@@ -914,7 +938,7 @@
     function registerServiceWorker() {
         if (!('serviceWorker' in navigator)) return;
         navigator.serviceWorker
-            .register('./sw.js?v=23', { updateViaCache: 'none' })
+            .register('./sw.js?v=24', { updateViaCache: 'none' })
             .then((registration) => registration.update())
             .catch((err) => {
                 console.warn('ServiceWorker registration failed:', err);

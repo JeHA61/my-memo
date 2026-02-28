@@ -7,11 +7,11 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="BLACK SPACE">
-    <link rel="manifest" href="./manifest.webmanifest?v=27">
-    <link rel="icon" href="./icon-192-v6.png?v=27" sizes="192x192" type="image/png">
-    <link rel="icon" href="./icon-bs-v6.svg?v=27" type="image/svg+xml">
-    <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon-v6.png?v=27">
-    <link rel="apple-touch-icon-precomposed" sizes="180x180" href="./apple-touch-icon-v6.png?v=27">
+    <link rel="manifest" href="./manifest.webmanifest?v=28">
+    <link rel="icon" href="./icon-192-v6.png?v=28" sizes="192x192" type="image/png">
+    <link rel="icon" href="./icon-bs-v6.svg?v=28" type="image/svg+xml">
+    <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon-v6.png?v=28">
+    <link rel="apple-touch-icon-precomposed" sizes="180x180" href="./apple-touch-icon-v6.png?v=28">
     <title>BLACK SPACE</title>
     <style>
         /* [디자인 시스템 - 무채색 & 블랙] */
@@ -180,6 +180,7 @@
             flex-direction: column;
             align-items: flex-end;
             gap: 8px;
+            overflow: visible;
         }
         .todo-main-btn {
             border: 1px solid #333;
@@ -199,6 +200,9 @@
         .todo-main-btn:hover { color: #fff; border-color: #555; }
         .todo-panel {
             display: none;
+            position: absolute;
+            right: calc(100% + 10px);
+            bottom: 0;
             width: 270px;
             background: rgba(0, 0, 0, 0.95);
             border: 1px solid #222;
@@ -434,6 +438,8 @@
         body.app-mode .todo-panel {
             width: min(88vw, 300px);
             max-width: calc(100vw - 32px - env(safe-area-inset-left) - env(safe-area-inset-right));
+            right: calc(100% + 10px);
+            bottom: 0;
         }
         body.app-mode.app-writing .todo-fab {
             opacity: 0;
@@ -536,7 +542,7 @@
     const SECURITY_TOKEN_VAULT_KEY = 'BLACK_SPACE_TOKEN_VAULT';
     const SECURITY_ITERATIONS = 250000;
     const APP_BUILD_KEY = 'BLACK_SPACE_APP_BUILD';
-    const APP_BUILD = '2026-02-28-v27';
+    const APP_BUILD = '2026-02-28-v28';
 
     let db = loadLocalDb();
     let securityConfig = loadSecurityConfig();
@@ -619,7 +625,7 @@
         } catch (_err) {}
 
         const nextUrl = new URL(window.location.href);
-        nextUrl.searchParams.set('v', '27');
+        nextUrl.searchParams.set('v', '28');
         nextUrl.searchParams.set('b', String(Date.now()));
         window.location.replace(nextUrl.toString());
         return false;
@@ -938,7 +944,7 @@
     function registerServiceWorker() {
         if (!('serviceWorker' in navigator)) return;
         navigator.serviceWorker
-            .register('./sw.js?v=27', { updateViaCache: 'none' })
+            .register('./sw.js?v=28', { updateViaCache: 'none' })
             .then((registration) => registration.update())
             .catch((err) => {
                 console.warn('ServiceWorker registration failed:', err);

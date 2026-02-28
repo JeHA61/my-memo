@@ -1,6 +1,6 @@
+import * as React from 'react';
 import { useEffect, useRef } from 'react';
 import '../../sync.js';
-import legacySourceHtml from '../legacy/legacy-source.html?raw';
 import { mountLegacyApp } from '../legacy/loader.js';
 
 export default function LegacyApp() {
@@ -12,6 +12,9 @@ export default function LegacyApp() {
 
     (async () => {
       if (!hostRef.current) return;
+      const response = await fetch('./src/legacy/legacy-source.html', { cache: 'no-store' });
+      if (!response.ok) throw new Error(`Failed to load legacy source: ${response.status}`);
+      const legacySourceHtml = await response.text();
       const cleanup = await mountLegacyApp({
         hostElement: hostRef.current,
         htmlText: legacySourceHtml
@@ -29,5 +32,5 @@ export default function LegacyApp() {
     };
   }, []);
 
-  return <div ref={hostRef} id="legacy-app-root" />;
+  return React.createElement('div', { ref: hostRef, id: 'legacy-app-root' });
 }

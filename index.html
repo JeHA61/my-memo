@@ -7,11 +7,11 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="BLACK SPACE">
-    <link rel="manifest" href="./manifest.webmanifest?v=25">
-    <link rel="icon" href="./icon-192-v6.png?v=25" sizes="192x192" type="image/png">
-    <link rel="icon" href="./icon-bs-v6.svg?v=25" type="image/svg+xml">
-    <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon-v6.png?v=25">
-    <link rel="apple-touch-icon-precomposed" sizes="180x180" href="./apple-touch-icon-v6.png?v=25">
+    <link rel="manifest" href="./manifest.webmanifest?v=26">
+    <link rel="icon" href="./icon-192-v6.png?v=26" sizes="192x192" type="image/png">
+    <link rel="icon" href="./icon-bs-v6.svg?v=26" type="image/svg+xml">
+    <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon-v6.png?v=26">
+    <link rel="apple-touch-icon-precomposed" sizes="180x180" href="./apple-touch-icon-v6.png?v=26">
     <title>BLACK SPACE</title>
     <style>
         /* [디자인 시스템 - 무채색 & 블랙] */
@@ -109,7 +109,7 @@
         .sync-fab {
             position: fixed;
             left: 22px;
-            bottom: 40px;
+            bottom: 28px;
             z-index: 1200;
             display: flex;
             flex-direction: column;
@@ -174,7 +174,7 @@
             position: fixed;
             right: 98px;
             left: auto;
-            bottom: 40px;
+            bottom: 28px;
             z-index: 1190;
             display: flex;
             flex-direction: column;
@@ -536,7 +536,7 @@
     const SECURITY_TOKEN_VAULT_KEY = 'BLACK_SPACE_TOKEN_VAULT';
     const SECURITY_ITERATIONS = 250000;
     const APP_BUILD_KEY = 'BLACK_SPACE_APP_BUILD';
-    const APP_BUILD = '2026-02-28-v25';
+    const APP_BUILD = '2026-02-28-v26';
 
     let db = loadLocalDb();
     let securityConfig = loadSecurityConfig();
@@ -619,7 +619,7 @@
         } catch (_err) {}
 
         const nextUrl = new URL(window.location.href);
-        nextUrl.searchParams.set('v', '25');
+        nextUrl.searchParams.set('v', '26');
         nextUrl.searchParams.set('b', String(Date.now()));
         window.location.replace(nextUrl.toString());
         return false;
@@ -938,7 +938,7 @@
     function registerServiceWorker() {
         if (!('serviceWorker' in navigator)) return;
         navigator.serviceWorker
-            .register('./sw.js?v=25', { updateViaCache: 'none' })
+            .register('./sw.js?v=26', { updateViaCache: 'none' })
             .then((registration) => registration.update())
             .catch((err) => {
                 console.warn('ServiceWorker registration failed:', err);

@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, test } from 'vitest';
 import LegacyApp from '../src/components/LegacyApp.jsx';
 
 beforeEach(() => {
-  window.localStorage.setItem('BLACK_SPACE_APP_BUILD', '2026-02-28-v30');
+  window.localStorage.setItem('BLACK_SPACE_APP_BUILD', '2026-02-28-v31');
 });
 
 describe('LegacyApp(React 래퍼)', () => {

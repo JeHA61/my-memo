@@ -7,11 +7,11 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="BLACK SPACE">
-    <link rel="manifest" href="./manifest.webmanifest?v=28">
-    <link rel="icon" href="./icon-192-v6.png?v=28" sizes="192x192" type="image/png">
-    <link rel="icon" href="./icon-bs-v6.svg?v=28" type="image/svg+xml">
-    <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon-v6.png?v=28">
-    <link rel="apple-touch-icon-precomposed" sizes="180x180" href="./apple-touch-icon-v6.png?v=28">
+    <link rel="manifest" href="./manifest.webmanifest?v=29">
+    <link rel="icon" href="./icon-192-v6.png?v=29" sizes="192x192" type="image/png">
+    <link rel="icon" href="./icon-bs-v6.svg?v=29" type="image/svg+xml">
+    <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon-v6.png?v=29">
+    <link rel="apple-touch-icon-precomposed" sizes="180x180" href="./apple-touch-icon-v6.png?v=29">
     <title>BLACK SPACE</title>
     <style>
         /* [디자인 시스템 - 무채색 & 블랙] */
@@ -200,9 +200,7 @@
         .todo-main-btn:hover { color: #fff; border-color: #555; }
         .todo-panel {
             display: none;
-            position: absolute;
-            right: calc(100% + 10px);
-            bottom: 0;
+            position: fixed;
             width: 270px;
             background: rgba(0, 0, 0, 0.95);
             border: 1px solid #222;
@@ -438,8 +436,6 @@
         body.app-mode .todo-panel {
             width: min(88vw, 300px);
             max-width: calc(100vw - 32px - env(safe-area-inset-left) - env(safe-area-inset-right));
-            right: calc(100% + 10px);
-            bottom: 0;
         }
         body.app-mode.app-writing .todo-fab {
             opacity: 0;
@@ -542,7 +538,7 @@
     const SECURITY_TOKEN_VAULT_KEY = 'BLACK_SPACE_TOKEN_VAULT';
     const SECURITY_ITERATIONS = 250000;
     const APP_BUILD_KEY = 'BLACK_SPACE_APP_BUILD';
-    const APP_BUILD = '2026-02-28-v28';
+    const APP_BUILD = '2026-02-28-v29';
 
     let db = loadLocalDb();
     let securityConfig = loadSecurityConfig();
@@ -625,7 +621,7 @@
         } catch (_err) {}
 
         const nextUrl = new URL(window.location.href);
-        nextUrl.searchParams.set('v', '28');
+        nextUrl.searchParams.set('v', '29');
         nextUrl.searchParams.set('b', String(Date.now()));
         window.location.replace(nextUrl.toString());
         return false;
@@ -768,6 +764,9 @@
             todoFab.style.zIndex = '1520';
             todoFab.style.alignItems = 'flex-end';
         }
+
+        const panel = document.getElementById('todo-panel');
+        if (panel && panel.classList.contains('open')) positionTodoPanel();
     }
 
     function openAppPanel() {
@@ -852,11 +851,43 @@
     function toggleTodoPanel(event) {
         if (event) event.stopPropagation();
         const panel = document.getElementById('todo-panel');
+        const nextOpen = !panel.classList.contains('open');
         panel.classList.toggle('open');
+        if (nextOpen) positionTodoPanel();
     }
 
     function closeTodoPanel() {
         document.getElementById('todo-panel').classList.remove('open');
+    }
+
+    function positionTodoPanel() {
+        const panel = document.getElementById('todo-panel');
+        const btn = document.querySelector('#todo-fab .todo-main-btn');
+        if (!panel || !btn || !panel.classList.contains('open')) return;
+
+        const gap = 10;
+        const margin = 8;
+        panel.style.left = '0px';
+        panel.style.top = '0px';
+
+        // Measure actual panel size after open, then anchor it to the left of TODO button.
+        const btnRect = btn.getBoundingClientRect();
+        const panelRect = panel.getBoundingClientRect();
+        const panelW = Math.max(220, Math.round(panelRect.width));
+        const panelH = Math.max(140, Math.round(panelRect.height));
+
+        let left = Math.round(btnRect.left - panelW - gap);
+        let top = Math.round(btnRect.bottom - panelH);
+
+        const maxLeft = Math.max(margin, window.innerWidth - panelW - margin);
+        const maxTop = Math.max(margin, window.innerHeight - panelH - margin);
+        if (left < margin) left = margin;
+        if (left > maxLeft) left = maxLeft;
+        if (top < margin) top = margin;
+        if (top > maxTop) top = maxTop;
+
+        panel.style.left = `${left}px`;
+        panel.style.top = `${top}px`;
     }
 
     function scheduleAutoSave() {
@@ -944,7 +975,7 @@
     function registerServiceWorker() {
         if (!('serviceWorker' in navigator)) return;
         navigator.serviceWorker
-            .register('./sw.js?v=28', { updateViaCache: 'none' })
+            .register('./sw.js?v=29', { updateViaCache: 'none' })
             .then((registration) => registration.update())
             .catch((err) => {
                 console.warn('ServiceWorker registration failed:', err);

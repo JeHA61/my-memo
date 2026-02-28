@@ -7,11 +7,11 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="BLACK SPACE">
-    <link rel="manifest" href="./manifest.webmanifest?v=39">
-    <link rel="icon" href="./icon-192-v6.png?v=39" sizes="192x192" type="image/png">
-    <link rel="icon" href="./icon-bs-v6.svg?v=39" type="image/svg+xml">
-    <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon-v6.png?v=39">
-    <link rel="apple-touch-icon-precomposed" sizes="180x180" href="./apple-touch-icon-v6.png?v=39">
+    <link rel="manifest" href="./manifest.webmanifest?v=40">
+    <link rel="icon" href="./icon-192-v6.png?v=40" sizes="192x192" type="image/png">
+    <link rel="icon" href="./icon-bs-v6.svg?v=40" type="image/svg+xml">
+    <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon-v6.png?v=40">
+    <link rel="apple-touch-icon-precomposed" sizes="180x180" href="./apple-touch-icon-v6.png?v=40">
     <title>BLACK SPACE</title>
     <style>
         /* [디자인 시스템 - 무채색 & 블랙] */
@@ -146,8 +146,8 @@
         }
         .sync-main-btn:hover { color: #fff; border-color: #555; }
         .sync-main-btn.sync-gear-btn {
-            width: 26px;
-            height: 26px;
+            width: 30px;
+            height: 30px;
             padding: 0;
             border-radius: 6px;
             border-color: #2a2a2a;
@@ -160,8 +160,8 @@
         }
         .sync-main-btn.sync-gear-btn:hover { color: #fff; border-color: #555; background: #111; }
         .sync-gear-icon {
-            width: 14px;
-            height: 14px;
+            width: 15px;
+            height: 15px;
             display: block;
             pointer-events: none;
         }
@@ -333,8 +333,8 @@
         @media (max-width: 768px) {
             .sync-fab { left: 14px; bottom: 16px; }
             .sync-main-btn { font-size: 9px; padding: 7px 10px; }
-            .sync-main-btn.sync-gear-btn { width: 26px; height: 26px; padding: 0; }
-            .sync-gear-icon { width: 14px; height: 14px; }
+            .sync-main-btn.sync-gear-btn { width: 30px; height: 30px; padding: 0; }
+            .sync-gear-icon { width: 15px; height: 15px; }
             .sync-action-btn { font-size: 10px; padding: 9px 10px; }
             .todo-fab { right: 14px; left: auto; bottom: 16px; }
             .todo-panel { width: min(88vw, 300px); }
@@ -570,7 +570,7 @@
     const SECURITY_TOKEN_VAULT_KEY = 'BLACK_SPACE_TOKEN_VAULT';
     const SECURITY_ITERATIONS = 250000;
     const APP_BUILD_KEY = 'BLACK_SPACE_APP_BUILD';
-    const APP_BUILD = '2026-02-28-v39';
+    const APP_BUILD = '2026-02-28-v40';
 
     let db = loadLocalDb();
     let securityConfig = loadSecurityConfig();
@@ -653,7 +653,7 @@
         } catch (_err) {}
 
         const nextUrl = new URL(window.location.href);
-        nextUrl.searchParams.set('v', '39');
+        nextUrl.searchParams.set('v', '40');
         nextUrl.searchParams.set('b', String(Date.now()));
         window.location.replace(nextUrl.toString());
         return false;
@@ -995,7 +995,7 @@
     function registerServiceWorker() {
         if (!('serviceWorker' in navigator)) return;
         navigator.serviceWorker
-            .register('./sw.js?v=39', { updateViaCache: 'none' })
+            .register('./sw.js?v=40', { updateViaCache: 'none' })
             .then((registration) => registration.update())
             .catch((err) => {
                 console.warn('ServiceWorker registration failed:', err);

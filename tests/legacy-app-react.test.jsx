@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import LegacyApp from '../src/components/LegacyApp.js';
 
 beforeEach(() => {
-  window.localStorage.setItem('BLACK_SPACE_APP_BUILD', '2026-02-28-v39');
+  window.localStorage.setItem('BLACK_SPACE_APP_BUILD', '2026-02-28-v40');
   const html = `
   <!doctype html>
   <html>

@@ -7,11 +7,11 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="BLACK SPACE">
-    <link rel="manifest" href="./manifest.webmanifest?v=29">
-    <link rel="icon" href="./icon-192-v6.png?v=29" sizes="192x192" type="image/png">
-    <link rel="icon" href="./icon-bs-v6.svg?v=29" type="image/svg+xml">
-    <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon-v6.png?v=29">
-    <link rel="apple-touch-icon-precomposed" sizes="180x180" href="./apple-touch-icon-v6.png?v=29">
+    <link rel="manifest" href="./manifest.webmanifest?v=30">
+    <link rel="icon" href="./icon-192-v6.png?v=30" sizes="192x192" type="image/png">
+    <link rel="icon" href="./icon-bs-v6.svg?v=30" type="image/svg+xml">
+    <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon-v6.png?v=30">
+    <link rel="apple-touch-icon-precomposed" sizes="180x180" href="./apple-touch-icon-v6.png?v=30">
     <title>BLACK SPACE</title>
     <style>
         /* [디자인 시스템 - 무채색 & 블랙] */
@@ -60,7 +60,7 @@
         .editor-view { flex: 1; display: flex; flex-direction: column; padding: 50px 70px; overflow-y: auto; position: relative; }
         body:not(.app-mode) .editor-view {
             padding-left: clamp(34px, 3.2vw, 76px);
-            padding-right: clamp(34px, 3.2vw, 76px);
+            padding-right: clamp(22px, 2.4vw, 52px);
         }
         body:not(.app-mode) .editor-view > #date-display,
         body:not(.app-mode) .editor-view > div:first-of-type,
@@ -172,7 +172,7 @@
 
         .todo-fab {
             position: fixed;
-            right: 98px;
+            right: 22px;
             left: auto;
             bottom: 16px;
             z-index: 1190;
@@ -311,7 +311,7 @@
             .sync-main-btn.sync-gear-btn { width: 36px; height: 36px; padding: 0; }
             .sync-gear-icon { width: 18px; height: 18px; }
             .sync-action-btn { font-size: 10px; padding: 9px 10px; }
-            .todo-fab { right: 86px; left: auto; bottom: 16px; }
+            .todo-fab { right: 14px; left: auto; bottom: 16px; }
             .todo-panel { width: min(88vw, 300px); }
         }
 
@@ -538,7 +538,7 @@
     const SECURITY_TOKEN_VAULT_KEY = 'BLACK_SPACE_TOKEN_VAULT';
     const SECURITY_ITERATIONS = 250000;
     const APP_BUILD_KEY = 'BLACK_SPACE_APP_BUILD';
-    const APP_BUILD = '2026-02-28-v29';
+    const APP_BUILD = '2026-02-28-v30';
 
     let db = loadLocalDb();
     let securityConfig = loadSecurityConfig();
@@ -621,7 +621,7 @@
         } catch (_err) {}
 
         const nextUrl = new URL(window.location.href);
-        nextUrl.searchParams.set('v', '29');
+        nextUrl.searchParams.set('v', '30');
         nextUrl.searchParams.set('b', String(Date.now()));
         window.location.replace(nextUrl.toString());
         return false;
@@ -686,13 +686,13 @@
         const todoFab = document.getElementById('todo-fab');
         if (!syncFab || !todoFab) return;
         const memoListBar = document.getElementById('memo-list-bar');
-        const clipBtn = document.querySelector('.clip-btn');
-        const divider = document.querySelector('.editor-view .divider');
         const appBottomOffset = 'calc(env(safe-area-inset-bottom) + 38px)';
         const appTopOffset = 'calc(env(safe-area-inset-top) + 12px)';
         const syncRightOffset = 'max(12px, calc(env(safe-area-inset-right) + 4px))';
         const appFabMaxWidth = 'calc(100vw - 32px - env(safe-area-inset-left) - env(safe-area-inset-right))';
         const syncFabMaxWidth = 'calc(100vw - 24px - env(safe-area-inset-left) - env(safe-area-inset-right))';
+        const desktopFabEdgePx = 22;
+        const desktopFabBottomPx = 16;
         let panelAlignedRightOffset = syncRightOffset;
 
         if (isAppMode && appPanelOpen && memoListBar) {
@@ -714,22 +714,10 @@
             syncFab.style.zIndex = '';
             syncFab.style.alignItems = '';
 
-            const rightRefs = [];
-            if (clipBtn) {
-                const clipRect = clipBtn.getBoundingClientRect();
-                if (clipRect && clipRect.width > 0) rightRefs.push(clipRect.right);
-            }
-            if (divider) {
-                const dividerRect = divider.getBoundingClientRect();
-                if (dividerRect && dividerRect.width > 0) rightRefs.push(dividerRect.right);
-            }
-            const refRight = rightRefs.length > 0 ? Math.max(...rightRefs) : null;
-            const desktopTodoRightPx = refRight ? Math.max(18, Math.round(window.innerWidth - refRight)) : 98;
-
             todoFab.style.position = 'fixed';
             todoFab.style.display = 'flex';
-            todoFab.style.right = `${desktopTodoRightPx}px`;
-            todoFab.style.bottom = '16px';
+            todoFab.style.right = `${desktopFabEdgePx}px`;
+            todoFab.style.bottom = `${desktopFabBottomPx}px`;
             todoFab.style.left = 'auto';
             todoFab.style.maxWidth = '';
             todoFab.style.zIndex = '1190';
@@ -975,7 +963,7 @@
     function registerServiceWorker() {
         if (!('serviceWorker' in navigator)) return;
         navigator.serviceWorker
-            .register('./sw.js?v=29', { updateViaCache: 'none' })
+            .register('./sw.js?v=30', { updateViaCache: 'none' })
             .then((registration) => registration.update())
             .catch((err) => {
                 console.warn('ServiceWorker registration failed:', err);

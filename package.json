@@ -8,7 +8,11 @@
     "preview": "vite preview",
     "test:unit": "vitest run",
     "test:sync": "node --test sync.test.cjs",
-    "test": "npm run test:unit && npm run test:sync"
+    "test": "npm run test:unit && npm run test:sync",
+    "release:sync": "node scripts/release-sync.mjs",
+    "verify:server": "node scripts/verify-test-server.mjs",
+    "release:check": "npm run test && npm run build && npm run verify:server",
+    "release:auto": "npm run release:sync && npm run release:check"
   },
   "dependencies": {
     "react": "^18.3.1",

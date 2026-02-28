@@ -27,6 +27,21 @@ npm run test:unit   # Vitest (React/레거시 로더)
 npm run test:sync   # 기존 sync.js node 테스트
 ```
 
+## 자동 갱신 + 테스트 서버 검증
+
+관련 파일 버전 자동 갱신 후, 테스트/빌드/로컬 테스트 서버 검증까지 한 번에 실행:
+
+```bash
+npm run release:auto
+```
+
+개별 실행:
+
+```bash
+npm run release:sync   # index/legacy/manifest/sw/테스트 버전 자동 동기화
+npm run verify:server  # 로컬 테스트 서버에서 엔트리/manifest/sw 스모크 검증
+```
+
 ## 빌드 방법
 
 ```bash

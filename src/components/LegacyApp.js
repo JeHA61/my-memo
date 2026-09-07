@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { useEffect, useRef } from 'react';
+import '../../device-vault.js';
 import '../../sync.js';
 import { mountLegacyApp } from '../legacy/loader.js';
 

@@ -29,6 +29,28 @@
       (() => {
         let fallbackStarted = false;
 
+        const loadDeviceVaultScript = () => new Promise((resolve, reject) => {
+          if (window.BlackSpaceDeviceVault) {
+            resolve();
+            return;
+          }
+
+          const existing = document.querySelector('script[data-device-vault-loader="fallback"]');
+          if (existing) {
+            existing.addEventListener('load', () => resolve(), { once: true });
+            existing.addEventListener('error', () => reject(new Error('device-vault.js load failed')), { once: true });
+            return;
+          }
+
+          const script = document.createElement('script');
+          script.src = './device-vault.js?v=42';
+          script.async = true;
+          script.setAttribute('data-device-vault-loader', 'fallback');
+          script.onload = () => resolve();
+          script.onerror = () => reject(new Error('device-vault.js load failed'));
+          document.head.appendChild(script);
+        });
+
         const loadSyncScript = () => new Promise((resolve, reject) => {
           if (window.Sync) {
             resolve();
@@ -80,6 +102,7 @@
             if (!root) return;
             root.innerHTML = bodyClone.innerHTML.trim();
 
+            await loadDeviceVaultScript();
             await loadSyncScript();
 
             if (scriptText.trim()) {

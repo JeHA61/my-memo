@@ -1,4 +1,4 @@
-const CACHE_NAME = 'black-space-os-v41';
+const CACHE_NAME = 'black-space-os-v42';
 const APP_SHELL = [
   './',
   './index.html',

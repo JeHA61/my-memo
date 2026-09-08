@@ -36,6 +36,32 @@ test('normalizeDb: legacy shape gets normalized', () => {
     assert.deepEqual(db.todoTombstones, {});
 });
 
+test('normalizeDb: deleted memos do not recreate removed folders', () => {
+    const db = normalizeDb({
+        folders: ['General'],
+        memos: [
+            {
+                id: 'deleted-memo',
+                folder: 'Removed',
+                date: '2026-01-01T00:00:00.000Z',
+                updatedAt: '2026-01-02T00:00:00.000Z',
+                deletedAt: '2026-01-02T00:00:00.000Z',
+            },
+            {
+                id: 'tombstoned-memo',
+                folder: 'Also Removed',
+                date: '2026-01-01T00:00:00.000Z',
+                updatedAt: '2026-01-01T00:00:00.000Z',
+            },
+        ],
+        memoTombstones: {
+            'tombstoned-memo': '2026-01-03T00:00:00.000Z',
+        },
+    });
+
+    assert.deepEqual(db.folders, ['General']);
+});
+
 test('mergeDb: newer memo wins by updatedAt', () => {
     const local = normalizeDb({
         folders: ['General'],

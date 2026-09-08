@@ -70,8 +70,6 @@
                   const folderRaw = String(source.folder || '').trim();
                   const folder = folderRaw || 'General';
 
-                  folderSet.add(folder);
-
                   const date = toIsoOr(source.date, now);
                   const updatedAt = toIsoOr(source.updatedAt, date);
                   const deletedAt = toIsoOr(source.deletedAt, null);
@@ -114,6 +112,7 @@
                 memo.updatedAt = maxIso(memo.updatedAt, combinedDeleted);
                 memoTombstones[memo.id] = combinedDeleted;
             }
+            if (!memo.deletedAt) folderSet.add(memo.folder);
         });
 
         todos.forEach((todo) => {

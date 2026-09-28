@@ -5,7 +5,8 @@ import { mountLegacyApp } from '../src/legacy/loader.js';
 
 const STORAGE_KEY = 'BLACK_SPACE_OS_V2';
 const BUILD_KEY = 'BLACK_SPACE_APP_BUILD';
-const BUILD = '2026-02-28-v42';
+const LEGACY_HTML = readFileSync('src/legacy/legacy-source.html', 'utf8');
+const BUILD = LEGACY_HTML.match(/const APP_BUILD = '([^']+)'/)?.[1];
 
 describe('immediate memo persistence', () => {
   let host;
@@ -47,8 +48,7 @@ describe('immediate memo persistence', () => {
 
     host = document.createElement('div');
     document.body.appendChild(host);
-    const html = readFileSync('src/legacy/legacy-source.html', 'utf8');
-    teardown = await mountLegacyApp({ hostElement: host, htmlText: html });
+    teardown = await mountLegacyApp({ hostElement: host, htmlText: LEGACY_HTML });
     window.selectMemo('memo-1');
   });
 

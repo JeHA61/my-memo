@@ -912,8 +912,29 @@
         panel.style.top = `${top}px`;
     }
 
+    function persistCurrentMemoDraft() {
+        const memo = db.memos.find((item) => item.id === currentMemoId && !item.deletedAt);
+        const titleInput = document.getElementById('title-input');
+        const contentInput = document.getElementById('content-input');
+        if (!memo || !titleInput || !contentInput) return false;
+
+        memo.title = titleInput.value;
+        memo.content = contentInput.value;
+        memo.deletedAt = null;
+        if (Sync) {
+            Sync.touchMemo(memo);
+        } else {
+            const now = new Date().toISOString();
+            memo.date = now;
+            memo.updatedAt = now;
+        }
+
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
+        return true;
+    }
+
     function scheduleAutoSave() {
-        if (!currentMemoId) return;
+        if (!persistCurrentMemoDraft()) return;
         autoSaveDirty = true;
         if (autoSaveTimer) clearTimeout(autoSaveTimer);
         autoSaveTimer = setTimeout(() => {
